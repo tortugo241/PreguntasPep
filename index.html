@@ -1,0 +1,2838 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trivia PEP - Pensamiento Económico y Político</title>
+    <!-- Tailwind CSS para estilos rápidos y responsivos -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f3f4f6;
+        }
+        .option-btn {
+            transition: all 0.2s;
+        }
+        .option-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        .correct {
+            background-color: #10B981 !important; /* Green */
+            color: white !important;
+            border-color: #10B981 !important;
+        }
+        .incorrect {
+            background-color: #EF4444 !important; /* Red */
+            color: white !important;
+            border-color: #EF4444 !important;
+        }
+        /* Animación suave para cambio de preguntas */
+        .fade-in {
+            animation: fadeIn 0.5s;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4">
+
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-3xl overflow-hidden" id="app-container">
+        <!-- Header -->
+        <div class="bg-blue-900 p-6 text-white text-center relative">
+            <h1 class="text-2xl font-bold mb-2">Trivia PEP</h1>
+            <p class="text-blue-200 text-sm">Introducción al Pensamiento Económico y Político</p>
+            <div class="absolute top-4 right-4 text-xs bg-blue-800 px-3 py-1 rounded-full">
+                Puntaje: <span id="score">0</span>
+            </div>
+            <div class="absolute top-4 left-4 text-xs bg-blue-800 px-3 py-1 rounded-full">
+                Pregunta: <span id="current-q-num">1</span> / <span id="total-q-num">--</span>
+            </div>
+        </div>
+
+        <!-- Pantalla de Inicio -->
+        <div id="start-screen" class="p-8 text-center">
+            <div class="mb-8">
+                <svg class="w-24 h-24 mx-auto text-blue-900 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+                </svg>
+                <h2 class="text-xl font-bold text-gray-800 mb-4">¿Listo para estudiar?</h2>
+                <p class="text-gray-600 mb-6">Este banco contiene preguntas de los controles 6 al 10 y Solemnes. Las preguntas aparecerán en orden aleatorio.</p>
+            </div>
+            <button onclick="startGame()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg text-lg transition shadow-lg w-full md:w-auto">
+                Comenzar Trivia
+            </button>
+        </div>
+
+        <!-- Pantalla de Pregunta -->
+        <div id="quiz-screen" class="hidden p-6 md:p-8">
+            <div class="mb-6">
+                <span id="category-tag" class="inline-block bg-gray-200 rounded-full px-3 py-1 text-xs font-semibold text-gray-700 mr-2 mb-2">Categoría</span>
+                <h3 id="question-text" class="text-lg md:text-xl font-medium text-gray-900 leading-relaxed fade-in">
+                    <!-- Pregunta aquí -->
+                </h3>
+            </div>
+
+            <div id="options-container" class="space-y-3 mb-6 fade-in">
+                <!-- Botones generados por JS -->
+            </div>
+
+            <!-- Feedback y Botón Siguiente -->
+            <div id="feedback-area" class="hidden border-t pt-4 mt-4">
+                <div id="feedback-message" class="text-center font-bold text-lg mb-4"></div>
+                <button id="next-btn" onclick="nextQuestion()" class="bg-blue-900 hover:bg-blue-800 text-white font-bold py-3 px-6 rounded-lg w-full transition">
+                    Siguiente Pregunta
+                </button>
+            </div>
+        </div>
+
+        <!-- Pantalla Final -->
+        <div id="end-screen" class="hidden p-8 text-center">
+            <h2 class="text-3xl font-bold text-gray-800 mb-4">¡Terminaste!</h2>
+            <p class="text-gray-600 mb-6">Has respondido todas las preguntas disponibles en esta sesión.</p>
+            <div class="text-5xl font-bold text-blue-900 mb-2" id="final-score">0</div>
+            <p class="text-sm text-gray-500 mb-8">Puntos Totales</p>
+            <button onclick="location.reload()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg transition shadow-lg">
+                Volver a Jugar
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // --- BASE DE DATOS DE PREGUNTAS ---
+        // Extraída y formateada del archivo Banco_Preguntas_PEP.txt
+        const questionsDB = [
+            // CONTROL 6
+            {
+                category: "Control 6 - Sandel",
+                question: "Bajo el contexto del dilema del tranvía propuesto por Sandel, ¿a qué corresponde el 'bien común'?",
+                options: {
+                    A: "Respetar las decisiones del azar",
+                    B: "Bienestar de la mayoría",
+                    C: "Preservar los derechos naturales del hombre",
+                    D: "Abolir el sistema de justicia corrupto"
+                },
+                correct: "B"
+            },
+            {
+                category: "Control 6 - Sandel",
+                question: "¿A qué alude Sandel al decir que 'los mercados respetan la libertad individual'?",
+                options: {
+                    A: "Las personas le dan por sí mismas el valor a los bienes que se intercambian",
+                    B: "Las libertad de colusión está permitida siempre y cuando los partícipes compartan dichos valores",
+                    C: "Las personas tienen permitido ser independientes e individualistas en temas de beneficio",
+                    D: "Se permite al ser humano más virtuoso a imponer cierto valor a los bienes y servicios"
+                },
+                correct: "A"
+            },
+            {
+                category: "Control 6 - Sandel",
+                question: "La concepción de Aristóteles sobre la justicia consiste en dar a cada uno lo que se merece, bajo esta definición, ¿qué hemos de identificar para determinar quién merece qué?",
+                options: {
+                    A: "Los méritos realizados en sociedad",
+                    B: "El compañerismo y respeto al prójimo",
+                    C: "Virtudes dignas de honores",
+                    D: "Habilidades políticas e intelectuales"
+                },
+                correct: "C"
+            },
+            {
+                category: "Control 6 - Sandel",
+                question: "¿Por qué, según Michael Sandel en 'Hacer lo que es debido', el aumento del precio de las bolsas de hielo a diez dólares en una gasolinera de Orlando después del huracán Charley generó controversia?",
+                options: {
+                    A: "Porque se consideraba una medida necesaria para evitar la escasez de hielo.",
+                    B: "Porque reflejaba una práctica comúnmente aceptada en mercados de libre competencia.",
+                    C: "Porque algunos lo vieron como una explotación de las necesidades básicas de las personas en situaciones de vulnerabilidad.",
+                    D: "Porque el aumento del precio se utilizó para subsidiar otros productos."
+                },
+                correct: "C"
+            },
+            {
+                category: "Control 6 - Sandel",
+                question: "¿Qué acción, según Sandel, tomó el fiscal general de Florida en respuesta a los precios inflados después del huracán?",
+                options: {
+                    A: "Incrementó los precios máximos permitidos",
+                    B: "No tomó ninguna acción",
+                    C: "Impuso multas y ordenó devoluciones a los clientes",
+                    D: "Permitió que los precios siguieran subiendo"
+                },
+                correct: "C"
+            },
+            {
+                category: "Control 6 - Sandel",
+                question: "En el texto de Sandel, la metáfora del tsunami se relaciona ampliamente con el alcance concerniente a:",
+                options: {
+                    A: "Fracaso, éxito y justicia",
+                    B: "Éxito, justicia, moralidad",
+                    C: "Fracaso, éxito y moralidad",
+                    D: "Éxito, moralidad e injusticia"
+                },
+                correct: "A"
+            },
+            {
+                category: "Control 6 - Sandel",
+                question: "Según Sandel (2009) ¿Cuál es la razón principal que dan los economistas del libre mercado para justificar precios altos después de un desastre natural?",
+                options: {
+                    A: "Ajustan la oferta y la demanda de bienes limitados.",
+                    B: "Aumentan la competencia entre proveedores.",
+                    C: "Garantizan que solo los más ricos puedan comprar.",
+                    D: "Ayudan al gobierno a recaudar más impuestos."
+                },
+                correct: "A"
+            },
+            {
+                category: "Control 6 - Sandel",
+                question: "¿Qué argumento, según Sandel, utilizan los defensores del libre mercado para justificar los precios elevados tras desastres naturales?",
+                options: {
+                    A: "Se promueve la justicia social",
+                    B: "Se incentiva la distribución rápida de bienes necesarios",
+                    C: "Se garantiza la igualdad de acceso a los recursos",
+                    D: "Se establece un precio justo basado en la tradición"
+                },
+                correct: "B"
+            },
+            {
+                category: "Control 6 - Sandel",
+                question: "Para Sandel existen tres maneras de enfocar la justicia, ¿cuáles son estas?",
+                options: {
+                    A: "Diversificar utilidades, Maximizar el bienestar, Libertad individual",
+                    B: "Diversificar utilidades, Maximizar el bienestar, Jerarquía",
+                    C: "Diversificar utilidades, Libertad individual, Virtud",
+                    D: "Maximizar el bienestar, Libertad individual, Virtud"
+                },
+                correct: "D"
+            },
+            {
+                category: "Control 6 - Sandel",
+                question: "Según el texto de Sandel, ¿qué argumentos utilizó el Pentágono con el fin de justificar las restricciones para otorgar el Corazón Púrpura?",
+                options: {
+                    A: "Solo que las dolencias psicológicas son difíciles de diagnosticar.",
+                    B: "Que las dolencias psicológicas son difíciles de diagnosticar y que el estrés postraumático no es causado intencionalmente por el enemigo.",
+                    C: "Que sin sangre no hay mérito y el estrés no es intencional.",
+                    D: "Todas las afirmaciones."
+                },
+                correct: "B"
+            },
+            {
+                category: "Control 6 - Sandel",
+                question: "En el texto de Sandel vemos que 'La codicia es un vicio (...) No es que ya sea un vicio personal; es que...'",
+                options: {
+                    A: "... choca con la virtud cívica",
+                    B: "... desencadena egoísmo y desigualdad",
+                    C: "... choca con la libertad del otro",
+                    D: "... crea monopolios"
+                },
+                correct: "A"
+            },
+            {
+                category: "Control 6 - Sandel",
+                question: "En el caso del huracán Charley ¿Con cuál manera de ver la justicia relaciona Sandel la indignación pública frente a los precios excesivamente altos?",
+                options: {
+                    A: "Incrementar el bienestar.",
+                    B: "Promover la virtud.",
+                    C: "Respetar la libertad.",
+                    D: "Garantizar la igualdad."
+                },
+                correct: "B"
+            },
+            {
+                category: "Control 6 - Sandel",
+                question: "Sandel comenta que existe un argumento común a favor de los mercados sin restricciones basado en dos aseveraciones, ¿cuáles son?",
+                options: {
+                    A: "Promover la igualdad económica y el derecho a voto",
+                    B: "Respetar la libertad política y eficiencia económica",
+                    C: "Fomentar la competencia y la libre expresión",
+                    D: "Maximizar el bienestar común y respetar la libertad individual"
+                },
+                correct: "D"
+            },
+            {
+                category: "Control 6 - Sandel",
+                question: "Acorde 'Hacer lo que es debido' (Sandel, 2009), los filósofos políticos modernos afirman que una sociedad justa...",
+                options: {
+                    A: "... respeta los deseos de la mayoría para establecer las leyes",
+                    B: "... atropella aquellos deseos egoístas que no permiten vivir en armonía",
+                    C: "... reprime el pensamiento utilitarista",
+                    D: "... respeta la libertad de cada uno de escoger su propia concepción de la vida buena"
+                },
+                correct: "D"
+            },
+            {
+                category: "Control 6 - Sandel",
+                question: "Según Sandel, los filósofos políticos modernos piensan que:",
+                options: {
+                    A: "Los principios de la justicia no deben fundamentarse en concepciones de la virtud.",
+                    B: "Las teorías de Aristóteles estaban siempre en lo correcto.",
+                    C: "La libertad es irrelevante para determinar lo que es justo.",
+                    D: "La sociedad debería dedicarse solamente a maximizar el bienestar general."
+                },
+                correct: "A"
+            },
+            {
+                category: "Control 6 - Sandel",
+                question: "Sandel indaga sobre la indignación pública respecto al pago de primas millonarias a ejecutivos de AIG. ¿Cuál razón cree él que explica mejor la indignación?",
+                options: {
+                    A: "AIG había sido rescatada con fondos públicos.",
+                    B: "Los contribuyentes sentían que se recompensaba la codicia.",
+                    C: "Los fondos públicos usados para rescatar a la empresa están esencialmente premiando el fracaso.",
+                    D: "El congreso había prometido prudencia."
+                },
+                correct: "C"
+            },
+            {
+                category: "Control 6 - Sandel",
+                question: "En el texto de Sandel, la discusión respecto al Corazón Púrpura surge a raíz de que:",
+                options: {
+                    A: "El Pentágono decidió otorgarlo sólo a quienes hayan sufrido heridas físicas.",
+                    B: "El ejército le otorgó el reconocimiento a demasiados veteranos.",
+                    C: "Se decidió que no se lo darían a veteranos que no hayan estado en Irak.",
+                    D: "Premia virtudes con las que muchos están en desacuerdo."
+                },
+                correct: "A"
+            },
+            {
+                category: "Control 6 - Sandel",
+                question: "Para Sandel, la discusión sobre el Corazón Púrpura ilustra la teoría de la justicia de:",
+                options: {
+                    A: "Aristóteles.",
+                    B: "Platón.",
+                    C: "Kant.",
+                    D: "Rawls."
+                },
+                correct: "A"
+            },
+            {
+                category: "Control 6 - Sandel",
+                question: "Según Sandel, ¿qué ley prohíbe las subidas especulativas de precios en Florida?",
+                options: {
+                    A: "La ley del libre comercio",
+                    B: "La ley de protección del consumidor",
+                    C: "La ley de justicia económica",
+                    D: "La ley contra el abuso de precios"
+                },
+                correct: "D"
+            },
+            {
+                category: "Control 6 - Sandel",
+                question: "Según Sandel, el Corazón Púrpura es un reconocimiento al:",
+                options: {
+                    A: "Sacrificio.",
+                    B: "Valor.",
+                    C: "Patriotismo.",
+                    D: "Idealismo."
+                },
+                correct: "A"
+            },
+            {
+                category: "Control 6 - Sandel",
+                question: "Según el economista Thomas Sowell, citado por Sandel, ¿qué término consideraba carente de sentido desde el punto de vista económico?",
+                options: {
+                    A: "Oferta y demanda",
+                    B: "Precio justo",
+                    C: "Precio abusivo",
+                    D: "Libertad de mercado"
+                },
+                correct: "C"
+            },
+
+            // CONTROL 7
+            {
+                category: "Control 7 - Socialismo",
+                question: "De acuerdo a la Declaración de la Internacional Socialista, ¿cuál es la condición previa e indispensable para ampliar los derechos y libertades en todos los ámbitos de la sociedad?",
+                options: {
+                    A: "Un rápido crecimiento económico basado en la liberalización.",
+                    B: "La existencia de un Estado fuerte centralizado.",
+                    C: "La democracia política.",
+                    D: "La abolición de la propiedad privada."
+                },
+                correct: "C"
+            },
+            {
+                category: "Control 7 - SPD",
+                question: "De acuerdo al texto del SPD (Programa de Godesberg), ¿cuál es la aspiración final del socialismo democrático ante la paradoja del poder inmenso desarrollado por la humanidad?",
+                options: {
+                    A: "Volver a un orden social preindustrial.",
+                    B: "Crear un gobierno mundial autoritario.",
+                    C: "Acelerar el desarrollo tecnológico sin importar consecuencias.",
+                    D: "Crear una sociedad libre de necesidad y temor, de guerra y opresión."
+                },
+                correct: "D"
+            },
+            {
+                category: "Control 7 - Sen",
+                question: "De acuerdo al texto de Sen, ¿qué problema central presenta el 'bienestarismo' según la crítica que Sen recoge de Rawls?",
+                options: {
+                    A: "Es demasiado complejo para aplicarse.",
+                    B: "Ignora la fuente u origen de las utilidades (ej. placer por discriminación).",
+                    C: "Solo considera valiosos los placeres materiales.",
+                    D: "Requiere conocimiento perfecto de las preferencias."
+                },
+                correct: "B"
+            },
+            {
+                category: "Control 7 - Bernstein",
+                question: "Según Bernstein (1899), ¿por qué la revolución por la fuerza pierde sentido en ciertas condiciones?",
+                options: {
+                    A: "Porque las minorías privilegiadas siempre prevalecen.",
+                    B: "Porque no se puede derrocar a una nación entera.",
+                    C: "Porque la legislación elimina toda necesidad de cambio.",
+                    D: "Porque las clases trabajadoras rechazan toda forma de lucha."
+                },
+                correct: "B"
+            },
+            {
+                category: "Control 7 - Hobsbawm",
+                question: "En el texto de Hobsbawm, ¿Qué simboliza la figura de Marx en el contexto contemporáneo?",
+                options: {
+                    A: "Una figura anticuada sin relevancia.",
+                    B: "Un símbolo de la revolución industrial.",
+                    C: "Un economista refutado.",
+                    D: "Un ícono para los movimientos de justicia social y económica."
+                },
+                correct: "D"
+            },
+            {
+                category: "Control 7 - Lenin",
+                question: "Según Lenin, ¿cuándo podrá extinguirse por completo el Estado?",
+                options: {
+                    A: "Cuando el proletariado tome el poder mundial.",
+                    B: "Cuando se eliminen todas las formas de propiedad privada.",
+                    C: "Cuando se establezca una democracia directa.",
+                    D: "Cuando la sociedad ponga en práctica la regla: 'de cada cual, según su capacidad; a cada cual, según sus necesidades'."
+                },
+                correct: "D"
+            },
+            {
+                category: "Control 7 - Marx/Engels",
+                question: "De acuerdo al texto de Marx y Engels, ¿qué relación establece el autor entre el desarrollo de la gran industria y la globalización?",
+                options: {
+                    A: "La industria retrasa la globalización.",
+                    B: "La globalización es independiente de la industria.",
+                    C: "La industria depende de fronteras protegidas.",
+                    D: "La industria necesita expandirse globalmente, creando una interdependencia universal entre naciones."
+                },
+                correct: "D"
+            },
+            {
+                category: "Control 7 - Lenin",
+                question: "Según Lenin (1917), ¿Qué enfoque adopta Marx para analizar el desarrollo del comunismo?",
+                options: {
+                    A: "Construye utopías basadas en conjeturas.",
+                    B: "Se basa exclusivamente en la Comuna.",
+                    C: "Aplica la teoría del desarrollo al capitalismo como un naturalista.",
+                    D: "Ignora el origen histórico."
+                },
+                correct: "C"
+            },
+            {
+                category: "Control 7 - Hobsbawm",
+                question: "Según el texto de Hobsbawm, ¿Cuál fue una de las principales críticas de Marx a la economía capitalista?",
+                options: {
+                    A: "Falta de oportunidades de crecimiento personal.",
+                    B: "Tendencia a la automatización.",
+                    C: "La explotación de la clase trabajadora.",
+                    D: "Falta de regulación gubernamental."
+                },
+                correct: "C"
+            },
+            {
+                category: "Control 7 - Bernstein",
+                question: "Según Bernstein, ¿hacia dónde se dirigía constantemente la acción política en el marxismo tradicional?",
+                options: {
+                    A: "Reformas legislativas graduales.",
+                    B: "Colaboración con otros partidos.",
+                    C: "Hacia una convulsión revolucionaria.",
+                    D: "Expansión sindical."
+                },
+                correct: "C"
+            },
+            {
+                category: "Control 7 - Marx/Engels",
+                question: "Según Marx y Engels, ¿cuál es la función del 'gobierno del Estado moderno'?",
+                options: {
+                    A: "Mediador imparcial.",
+                    B: "Administrar los negocios y asuntos comunes que benefician a toda la clase burguesa.",
+                    C: "Preservar vestigios feudales.",
+                    D: "Limitar el poder económico de los capitalistas."
+                },
+                correct: "B"
+            },
+            {
+                category: "Control 7 - Lenin",
+                question: "Según Lenin, ¿Cómo funcionaría una democracia real en una sociedad comunista?",
+                options: {
+                    A: "Se volvería más inclusiva.",
+                    B: "Se volvería innecesaria y dejaría de existir por sí sola.",
+                    C: "Se limitaría a decisiones económicas.",
+                    D: "Se concentraría en la clase trabajadora."
+                },
+                correct: "B"
+            },
+            {
+                category: "Control 7 - Hobsbawm",
+                question: "Según Hobsbawm, ¿qué ocurrió con el proyecto de una economía socialista en su forma del siglo XX?",
+                options: {
+                    A: "Se consolidó mundialmente.",
+                    B: "Desapareció con el colapso de la URSS y no resurgirá.",
+                    C: "Se transformó en economía mixta.",
+                    D: "Sigue siendo el objetivo principal."
+                },
+                correct: "B"
+            },
+            {
+                category: "Control 7 - Bernstein",
+                question: "¿Qué tipo de enfoque social menciona Bernstein en lugar de la revolución violenta?",
+                options: {
+                    A: "Un enfoque evolutivo y reformista.",
+                    B: "Revolución progresiva.",
+                    C: "Surgimiento de las élites.",
+                    D: "Anarquismo liberal."
+                },
+                correct: "A"
+            },
+            {
+                category: "Control 7 - Sen",
+                question: "Según Sen, ¿cuáles son los dos tipos de crítica a un principio moral que establece al inicio?",
+                options: {
+                    A: "Crítica histórica y sociológica.",
+                    B: "Crítica por las implicaciones y crítica por principios previos (inconsistencia).",
+                    C: "Crítica económica y política.",
+                    D: "Crítica deductiva e inductiva."
+                },
+                correct: "B"
+            },
+            {
+                category: "Control 7 - Internacional Socialista",
+                question: "De acuerdo a la Declaración de la Internacional Socialista, ¿cuál es la postura respecto a la nacionalización de la economía?",
+                options: {
+                    A: "Es el único camino.",
+                    B: "Es el objetivo final.",
+                    C: "Debe ser completamente descartada.",
+                    D: "Es una herramienta que puede ser necesaria en ciertas circunstancias, pero no es un remedio para todo."
+                },
+                correct: "D"
+            },
+            {
+                category: "Control 7 - Marx/Engels",
+                question: "De acuerdo al texto de Marx y Engels, ¿cuál es la principal consecuencia de la maquinaria y la división del trabajo para el proletario?",
+                options: {
+                    A: "La pérdida del carácter propio del trabajo, volviéndose monótono.",
+                    B: "Aumento de salarios.",
+                    C: "Mayor valoración de la habilidad artesanal.",
+                    D: "Reducción de la jornada laboral."
+                },
+                correct: "A"
+            },
+            {
+                category: "Control 7 - Lenin",
+                question: "¿Cómo describía Lenin la democracia dentro de una sociedad capitalista?",
+                options: {
+                    A: "Sistema mediocre.",
+                    B: "Mecanismo para la igualdad.",
+                    C: "Forma equitativa.",
+                    D: "Un sistema para los ricos y las clases poseedoras (democracia restringida)."
+                },
+                correct: "D"
+            },
+            {
+                category: "Control 7 - Hobsbawm",
+                question: "Según Hobsbawm, ¿Cuál fue la postura de los partidos socialdemócratas post Primera Guerra Mundial respecto a la economía capitalista?",
+                options: {
+                    A: "Economía planificada inmediata.",
+                    B: "Se conformaron con políticas revisionistas, dejando operar a la economía capitalista.",
+                    C: "Nacionalización total.",
+                    D: "Rechazo a la intervención estatal."
+                },
+                correct: "B"
+            },
+            {
+                category: "Control 7 - Internacional Socialista",
+                question: "Según la Internacional Socialista, ¿cuál es el enfoque propuesto para la crisis ambiental y el empleo?",
+                options: {
+                    A: "Crecimiento acelerado.",
+                    B: "Decrecimiento.",
+                    C: "Un crecimiento ecológicamente equilibrado.",
+                    D: "Transferencia de industrias al Sur."
+                },
+                correct: "C"
+            },
+            {
+                category: "Control 7 - SPD",
+                question: "Según el texto del SPD, ¿qué significa la reivindicación de la 'co-gestión'?",
+                options: {
+                    A: "Trabajadores propietarios únicos.",
+                    B: "Sindicatos con poder de veto.",
+                    C: "Estado gestiona industrias.",
+                    D: "Que el trabajador debe dejar de ser un 'súbdito de la economía' para ser un 'ciudadano de ella'."
+                },
+                correct: "D"
+            },
+            {
+                category: "Control 7 - Sen",
+                question: "De acuerdo al texto de Sen, ¿en qué consiste la 'igualdad de capacidad básica'?",
+                options: {
+                    A: "Misma canasta de bienes.",
+                    B: "Mismo nivel de felicidad.",
+                    C: "En enfocarse en que las personas sean capaces de hacer ciertas cosas básicas (desplazarse, nutrirse).",
+                    D: "Maximizar talentos innatos."
+                },
+                correct: "C"
+            },
+            {
+                category: "Control 7 - Bernstein",
+                question: "Según Bernstein, la 'dictadura del proletariado' podría convertirse en la 'dictadura de los oradores y escritores del club'. ¿Qué le preocupa?",
+                options: {
+                    A: "Falta de líderes intelectuales.",
+                    B: "El riesgo de que una élite intelectual o política domine el movimiento por falta de una base organizativa autónoma.",
+                    C: "Necesidad de revolución violenta.",
+                    D: "Inevitabilidad de la burocracia."
+                },
+                correct: "B"
+            },
+            {
+                category: "Control 7 - Marx/Engels",
+                question: "Según Marx y Engels, ¿qué distingue a la 'época de la burguesía' de las anteriores en cuanto a clases sociales?",
+                options: {
+                    A: "Eliminación de clases.",
+                    B: "Complejización de jerarquías.",
+                    C: "La simplificación del antagonismo social en dos grandes clases (burguesía y proletariado).",
+                    D: "Conservación de formas feudales."
+                },
+                correct: "C"
+            },
+            {
+                category: "Control 7 - Sen",
+                question: "Según el ejemplo del minusválido en el texto de Sen, ¿qué se demuestra?",
+                options: {
+                    A: "La felicidad es irrelevante.",
+                    B: "Que existen necesidades que no se reflejan ni en la utilidad ni en la tenencia de bienes primarios.",
+                    C: "Las creencias anulan desventajas.",
+                    D: "Solo quienes se quejan merecen ayuda."
+                },
+                correct: "B"
+            },
+            {
+                category: "Control 7 - Hobsbawm",
+                question: "Según Hobsbawm, ¿Qué idea deberíamos rechazar sobre el marxismo?",
+                options: {
+                    A: "Que es obsoleto.",
+                    B: "Que existe una aguda diferencia entre un marxismo 'correcto' y uno 'incorrecto'.",
+                    C: "Que es un corpus acabado.",
+                    D: "Que tiene una única interpretación."
+                },
+                correct: "B"
+            },
+            {
+                category: "Control 7 - Sen",
+                question: "Según Sen, ¿cómo afecta la diversidad humana a la validez de la teoría de Rawls (bienes primarios)?",
+                options: {
+                    A: "La favorece.",
+                    B: "Es irrelevante.",
+                    C: "La fortalece.",
+                    D: "Debilita la teoría, ya que una misma cantidad de bienes primarios puede generar capacidades muy distintas en personas diferentes."
+                },
+                correct: "D"
+            },
+            {
+                category: "Control 7 - Lenin",
+                question: "En el texto de Lenin, ¿cómo llama Marx al Estado del período de transición entre capitalismo y comunismo?",
+                options: {
+                    A: "La dictadura revolucionaria del proletariado.",
+                    B: "Democracia directa de masas.",
+                    C: "Socialdemocracia cooperativa.",
+                    D: "Período socialista neoclásico."
+                },
+                correct: "A"
+            },
+            {
+                category: "Control 7 - Bernstein",
+                question: "¿Qué compara Bernstein en su análisis sobre las vías para lograr el cambio social?",
+                options: {
+                    A: "Reforma legislativa y negociación.",
+                    B: "Negociación y marxismo.",
+                    C: "Marxismo y democracia liberal.",
+                    D: "La reforma legislativa y la revolución violenta."
+                },
+                correct: "D"
+            },
+            {
+                category: "Control 7 - Marx/Engels",
+                question: "Según Marx y Engels, si la burguesía es descrita como 'altamente revolucionaria', ¿a qué se debe?",
+                options: {
+                    A: "Preservar tradiciones.",
+                    B: "A su necesidad incesante de transformar los instrumentos y las relaciones de producción.",
+                    C: "Alianzas con la aristocracia.",
+                    D: "Promoción de la equidad."
+                },
+                correct: "B"
+            },
+            {
+                category: "Control 7 - Hobsbawm",
+                question: "Según Hobsbawm, ¿Qué evento histórico refleja el impacto de la obra de Marx?",
+                options: {
+                    A: "Revolución Francesa.",
+                    B: "Segunda Guerra Mundial.",
+                    C: "La Revolución Rusa de 1917.",
+                    D: "Caída del Muro de Berlín."
+                },
+                correct: "C"
+            },
+            {
+                category: "Control 7 - Sen",
+                question: "Según Sen, ¿cuál es la crítica al criterio 'leximin' (igualdad de utilidad total centrada en el peor situado)?",
+                options: {
+                    A: "Que es indiferente a la intensidad de las necesidades y magnitud de ganancias/pérdidas de utilidad.",
+                    B: "Beneficia a los ricos.",
+                    C: "Requiere comparaciones imposibles.",
+                    D: "Es idéntico al utilitarismo."
+                },
+                correct: "A"
+            },
+            {
+                category: "Control 7 - Hobsbawm",
+                question: "Según Hobsbawm, ¿qué aspecto se destaca sobre la 'planificación' en una economía socialista?",
+                options: {
+                    A: "Marx dejó instrucciones detalladas.",
+                    B: "Fue ignorada.",
+                    C: "Fue introducida por socialdemócratas.",
+                    D: "La planificación está implícita en cualquier economía socialmente gestionada."
+                },
+                correct: "D"
+            },
+            {
+                category: "Control 7 - Marx/Engels",
+                question: "Según Marx y Engels, ¿por qué el proletariado es la única clase 'verdaderamente revolucionaria'?",
+                options: {
+                    A: "Porque los estamentos medios (artesanos, campesinos) son conservadores/reaccionarios al querer volver al pasado.",
+                    B: "Cuentan con respaldo militar.",
+                    C: "Las demás clases se benefician de la industria.",
+                    D: "El lumpemproletariado es más efectivo."
+                },
+                correct: "A"
+            },
+            {
+                category: "Control 7 - Internacional Socialista",
+                question: "Según la Declaración de la Internacional Socialista, ¿cuáles son los tres principios fundamentales?",
+                options: {
+                    A: "Crecimiento, estabilidad, defensa.",
+                    B: "Tradición, autoridad, orden.",
+                    C: "Nacionalización, planificación, partido único.",
+                    D: "Libertad, justicia y solidaridad."
+                },
+                correct: "D"
+            },
+            {
+                category: "Control 7 - SPD",
+                question: "Según el Programa de Godesberg (SPD), ¿cuáles son las nuevas raíces filosóficas del socialismo democrático?",
+                options: {
+                    A: "Solo materialismo histórico.",
+                    B: "En la ética cristiana, el humanismo y la filosofía clásica.",
+                    C: "Dictadura del proletariado.",
+                    D: "Abolición del Estado."
+                },
+                correct: "B"
+            },
+            {
+                category: "Control 7 - Sen",
+                question: "Según Sen, ¿cómo trataría el 'principio de la diferencia' de Rawls a un minusválido comparado con alguien sano?",
+                options: {
+                    A: "Más ingresos por utilidad.",
+                    B: "Menos ingresos por producción.",
+                    C: "No le concedería ni más ni menos ingresos por el solo hecho de su minusvalía (es ciego a la conversión de bienes en capacidad).",
+                    D: "Más bienes primarios."
+                },
+                correct: "C"
+            },
+            {
+                category: "Control 7 - Bernstein",
+                question: "Según Bernstein, ¿Qué domina en tiempos de paz cuando se usa la vía legislativa?",
+                options: {
+                    A: "La razón sobre la emoción.",
+                    B: "Emoción sobre inteligencia.",
+                    C: "Fuerza sobre negociación.",
+                    D: "Opresión sobre libertad."
+                },
+                correct: "A"
+            },
+            {
+                category: "Control 7 - Marx/Engels",
+                question: "Según Marx y Engels, la burguesía 'ha desgarrado sin piedad las abigarradas ligaduras feudales'. ¿A qué transformación se refiere?",
+                options: {
+                    A: "Fortalecimiento de lazos comunitarios.",
+                    B: "Creación de libertades tradicionales.",
+                    C: "A la sustitución de las relaciones personales y jerárquicas por el frío interés económico y el 'pago al contado'.",
+                    D: "Mantenimiento de ilusiones religiosas."
+                },
+                correct: "C"
+            },
+            {
+                category: "Control 7 - Lenin",
+                question: "¿Cómo describe Lenin al Estado dentro de la sociedad capitalista?",
+                options: {
+                    A: "Herramienta proletaria.",
+                    B: "Mecanismo de organización.",
+                    C: "Leviatán.",
+                    D: "Una máquina especial para la represión de una clase por otra."
+                },
+                correct: "D"
+            },
+            {
+                category: "Control 7 - Hobsbawm",
+                question: "Según Hobsbawm, ¿en qué se basa el debate actual entre neoliberales y críticos?",
+                options: {
+                    A: "Aplicación de teorías de Marx.",
+                    B: "En un intento de trasladar una degeneración patológica del principio de laissez-faire a la realidad económica.",
+                    C: "Nacionalización de empresas.",
+                    D: "Búsqueda de modelo nuevo."
+                },
+                correct: "B"
+            },
+            {
+                category: "Control 7 - Bernstein",
+                question: "Según Bernstein, ¿qué caracteriza a las clases trabajadoras en el socialismo?",
+                options: {
+                    A: "Tienen las virtudes y defectos de las condiciones económicas en las que viven.",
+                    B: "Tienen virtudes de condiciones sociales.",
+                    C: "Son dominantes.",
+                    D: "Siempre tienen poder revolucionario."
+                },
+                correct: "A"
+            },
+            {
+                category: "Control 7 - SPD",
+                question: "Según el texto del SPD (Godesberg), ¿cuál es la postura frente a la propiedad privada?",
+                options: {
+                    A: "Tiene derecho a la protección y al estímulo siempre que no impida un orden social justo.",
+                    B: "Se debe eliminar por completo.",
+                    C: "Solo para pequeñas empresas.",
+                    D: "Es un mal necesario temporal."
+                },
+                correct: "A"
+            },
+            {
+                category: "Control 7 - Internacional Socialista",
+                question: "Según la Internacional Socialista, ¿cuál es la postura frente a las nuevas tecnologías?",
+                options: {
+                    A: "Deben ser controladas socialmente para aprovechar oportunidades y minimizar riesgos.",
+                    B: "Desarrollo libre por el mercado.",
+                    C: "Rechazadas por completo.",
+                    D: "Propiedad exclusiva del Estado."
+                },
+                correct: "A"
+            },
+            {
+                category: "Control 7 - Sen",
+                question: "Según Sen, ¿por qué califica el enfoque de Rawls (bienes primarios) como 'fetichista'?",
+                options: {
+                    A: "Importancia excesiva a la riqueza.",
+                    B: "Asume deseo irracional.",
+                    C: "Sacraliza derechos.",
+                    D: "Porque se centra en los bienes en sí mismos, en lugar de lo que estos bienes hacen por los seres humanos."
+                },
+                correct: "D"
+            },
+            {
+                category: "Control 7 - Lenin",
+                question: "¿Qué es lo que Lenin admite desconocer respecto a la transición capitalismo-comunismo?",
+                options: {
+                    A: "La rapidez en que se avance desde la primera fase hasta la segunda.",
+                    B: "La opinión social.",
+                    C: "Reacción mundial.",
+                    D: "Carácter violento."
+                },
+                correct: "A"
+            },
+            {
+                category: "Control 7 - SPD",
+                question: "Según el texto del SPD, ¿cuál es la postura frente al comunismo?",
+                options: {
+                    A: "Aliado táctico.",
+                    B: "Versión radical legítima.",
+                    C: "Lo rechaza por haber falseado el pensamiento socialista y buscar la dictadura del partido.",
+                    D: "Propone diálogo."
+                },
+                correct: "C"
+            },
+            {
+                category: "Control 7 - Sen",
+                question: "Según Sen, ¿cuál es la crítica fundamental a la 'igualdad utilitarista'?",
+                options: {
+                    A: "Que al enfocarse solo en la utilidad marginal (suma total), ignora la distribución general del bienestar.",
+                    B: "Busca igualdad absoluta.",
+                    C: "Valora más a los de desventaja.",
+                    D: "Define utilidad abstractamente."
+                },
+                correct: "A"
+            },
+            {
+                category: "Control 7 - Hobsbawm",
+                question: "En el texto de Hobsbawm, ¿qué se afirma sobre los regímenes comunistas actuales?",
+                options: {
+                    A: "Que han abandonado el proyecto marxista leninista en la práctica.",
+                    B: "Involucran a la clase trabajadora.",
+                    C: "Lograron desigualdad inédita.",
+                    D: "Representan al 'hombre nuevo'."
+                },
+                correct: "A"
+            },
+            {
+                category: "Control 7 - Lenin",
+                question: "Según Lenin, ¿cuál es la diferencia principal entre la primera fase y la fase avanzada del comunismo?",
+                options: {
+                    A: "Clases no abolidas.",
+                    B: "Capitalistas con propiedad.",
+                    C: "El estado aún no se extingue debido a la persistencia del 'derecho burgués'.",
+                    D: "No hay dictadura proletaria."
+                },
+                correct: "C"
+            },
+            {
+                category: "Control 7 - Hobsbawm",
+                question: "Según Hobsbawm, ¿Cuál es el 'talón de Aquiles' del capitalismo?",
+                options: {
+                    A: "Incapacidad de generar riqueza.",
+                    B: "El conflicto entre la necesidad de controlar el impacto económico en la biosfera y el imperativo de máximo crecimiento.",
+                    C: "Dependencia estatal.",
+                    D: "Falta de innovación."
+                },
+                correct: "B"
+            },
+            {
+                category: "Control 7 - Bernstein",
+                question: "Según Bernstein, ¿cuál es la principal crítica al marxismo clásico?",
+                options: {
+                    A: "La contradicción entre la inmadurez del proletariado y el actuar como si estuviesen listos para la revolución.",
+                    B: "Falta de cohesión.",
+                    C: "Enfoque violento.",
+                    D: "Contradicción de ideales."
+                },
+                correct: "A"
+            },
+
+            // CONTROL 8
+            {
+                category: "Control 8 - Malatesta",
+                question: "Según La Anarquía (Malatesta), ¿cuál es el propósito principal al argumentar sobre la abolición de la autoridad?",
+                options: {
+                    A: "Establecer fuerza trascendente.",
+                    B: "Proponer la eliminación del monopolio de la fuerza y la influencia para la expansión de las fuerzas sociales.",
+                    C: "Destrucción de toda influencia mutua.",
+                    D: "Respaldar gobierno de dictadores electos."
+                },
+                correct: "B"
+            },
+            {
+                category: "Control 8 - Luxemburgo",
+                question: "Según Rosa Luxemburgo, ¿qué papel deben jugar la violencia y el armamento para la revolución?",
+                options: {
+                    A: "Contrarrestar la violencia de la contrarrevolución y proteger a las masas.",
+                    B: "Ninguno, debe ser pacífica.",
+                    C: "Papel exclusivo de la diplomacia.",
+                    D: "Sustituir consejos de trabajadores."
+                },
+                correct: "A"
+            },
+            {
+                category: "Control 8 - Mussolini",
+                question: "Según Mussolini, ¿qué lugar asigna el Estado fascista a la economía?",
+                options: {
+                    A: "Se atribuye el dominio económico mediante instituciones corporativas.",
+                    B: "Coordina solo en guerra.",
+                    C: "Manos de gremios privados.",
+                    D: "Regula a través de bancos."
+                },
+                correct: "A"
+            },
+            {
+                category: "Control 8 - Schmitt",
+                question: "Según Schmitt, ¿qué actitud se critica en los enemigos de Alemania y en quienes aceptan sus exigencias?",
+                options: {
+                    A: "La disposición a someterse nuevamente a los ideales liberales extranjeros en lugar de defender la soberanía.",
+                    B: "Buscar alianzas militares.",
+                    C: "Incapacidad de reconocer errores del liberalismo.",
+                    D: "Exceso de confianza militar."
+                },
+                correct: "A"
+            },
+            {
+                category: "Control 8 - Lenin",
+                question: "Según Lenin, ¿qué caracteriza al tercer período de la socialdemocracia rusa?",
+                options: {
+                    A: "La dispersión teórica, el practicismo mezquino y la pérdida del espíritu revolucionario.",
+                    B: "Expansión interracial.",
+                    C: "Fortalecimiento marxista.",
+                    D: "Auge populista."
+                },
+                correct: "A"
+            },
+            {
+                category: "Control 8 - Hitler",
+                question: "Según 'Mi Lucha' (Hitler), ¿cuál es la analogía final para la relación entre Estado y raza?",
+                options: {
+                    A: "Estado creador, raza resultado.",
+                    B: "El Estado como recipiente y la raza como su contenido.",
+                    C: "Raza instrumento del Estado.",
+                    D: "Estado organismo independiente."
+                },
+                correct: "B"
+            },
+            {
+                category: "Control 8 - Michels",
+                question: "Según Michels, ¿Cómo se relaciona la especialización dentro de un partido con la oligarquía?",
+                options: {
+                    A: "La especialización implica autoridad, equiparando necesidad de líderes con especialistas (democracia se vuelve aristocracia).",
+                    B: "Crea líderes incapaces de ejercer autoridad.",
+                    C: "Evita acumulación de poder.",
+                    D: "Garantiza que líderes sean servidores."
+                },
+                correct: "A"
+            },
+            {
+                category: "Control 8 - Sorel",
+                question: "¿Cuál es la advertencia de George Sorel al proletariado usando la analogía de los germanos?",
+                options: {
+                    A: "Evitar ser utopistas.",
+                    B: "Concentrar poder en líder.",
+                    C: "Que no deben avergonzarse de su 'barbarie' y ponerse a estudiar con los retóricos de la decadencia latina.",
+                    D: "Guerra social hipócrita."
+                },
+                correct: "C"
+            },
+            {
+                category: "Control 8 - Marinetti",
+                question: "Según Marinetti (Futurismo), el ataque contra la literatura y artes anteriores se basa en:",
+                options: {
+                    A: "La dicotomía entre la veneración por la inmovilidad del pensamiento y la glorificación del movimiento agresivo.",
+                    B: "Tensión sueño/expresión.",
+                    C: "Antagonismo místico/Centauro.",
+                    D: "Diferencia sabiduría/lodo."
+                },
+                correct: "A"
+            },
+            {
+                category: "Control 8 - Michels",
+                question: "Según Michels, ¿en qué principio se basa la necesidad de la organización?",
+                options: {
+                    A: "En el principio del menor esfuerzo (economía de energía), arma de los débiles contra los fuertes.",
+                    B: "Obligación moral.",
+                    C: "Deseo de líderes de concentrar poder.",
+                    D: "Necesidad de disfrazar deseos."
+                },
+                correct: "A"
+            },
+            {
+                category: "Control 8 - Malatesta",
+                question: "Para Malatesta, 'abolir la autoridad' significa principalmente:",
+                options: {
+                    A: "Abolir el monopolio de la fuerza y de la influencia sobre la sociedad.",
+                    B: "Sustituir Estado por élite.",
+                    C: "Disolver organización social.",
+                    D: "Reemplazar propiedad privada."
+                },
+                correct: "A"
+            },
+            {
+                category: "Control 8 - Schmitt",
+                question: "Según Schmitt, ¿cuál es la crítica que se hace a la democracia liberal?",
+                options: {
+                    A: "Promueve poder judicial fuerte.",
+                    B: "Restringe líderes.",
+                    C: "Prioriza moral cristiana.",
+                    D: "Que confunde la función del juez con la del líder, debilitando la autoridad del Estado y del derecho."
+                },
+                correct: "D"
+            },
+            {
+                category: "Control 8 - Hitler",
+                question: "Según Hitler, ¿Qué propone como base del proceso de 'nacionalización' de un pueblo?",
+                options: {
+                    A: "La educación en el respeto y conocimiento de la patria.",
+                    B: "Instituciones democráticas.",
+                    C: "Expansión militar.",
+                    D: "Reemplazo de idioma."
+                },
+                correct: "A"
+            },
+            {
+                category: "Control 8 - Michels",
+                question: "¿Por qué Michels considera los partidos democráticos/socialistas el mejor campo para observar la oligarquía?",
+                options: {
+                    A: "Porque representan la negación de la oligarquía, por lo que su aparición ahí es prueba terminante de la 'ley de hierro'.",
+                    B: "Porque defienden la oligarquía.",
+                    C: "Porque nacen como oposición.",
+                    D: "Porque es difícil de ver en conservadores."
+                },
+                correct: "A"
+            },
+            {
+                category: "Control 8 - Sorel",
+                question: "Según Sorel, ¿cuál es la distinción entre mitos y utopías?",
+                options: {
+                    A: "Mitos intelectuales, utopías voluntad.",
+                    B: "Mitos reformas, utopías destrucción.",
+                    C: "Los mitos son expresiones de voluntad (fuerzas históricas), las utopías son modelos para comparar (intelectuales).",
+                    D: "Mitos refutables, utopías no."
+                },
+                correct: "C"
+            },
+            {
+                category: "Control 8 - Hitler",
+                question: "Según Hitler, su paso por la pobreza le permitió:",
+                options: {
+                    A: "Empatía burguesa.",
+                    B: "Forjar una voluntad resistente y una visión social.",
+                    C: "Perder interés.",
+                    D: "Alejarse de la realidad."
+                },
+                correct: "B"
+            },
+            {
+                category: "Control 8 - Malatesta",
+                question: "Según Malatesta, ¿cuál es el principal prejuicio sobre el gobierno?",
+                options: {
+                    A: "Que es una fuerza que añade capacidades al individuo (incrementa la suma de fuerzas).",
+                    B: "Mal necesario.",
+                    C: "Voluntad colectiva.",
+                    D: "Protege a ricos."
+                },
+                correct: "A"
+            },
+            {
+                category: "Control 8 - Malatesta",
+                question: "Según Malatesta, ¿cómo se relacionan sus argumentos con Bakunin sobre la influencia?",
+                options: {
+                    A: "Ambas perjudiciales.",
+                    B: "Estableciendo que la dependencia mutua (influencia) es natural/vital, mientras que la autoridad es artificial.",
+                    C: "Gobierno solo monopolio si excluye inteligentes.",
+                    D: "Destrucción absoluta de vínculos."
+                },
+                correct: "B"
+            },
+            {
+                category: "Control 8 - Mussolini",
+                question: "¿Qué actitud declara Mussolini respecto a las alianzas (Alemania)?",
+                options: {
+                    A: "Que Italia seguirá a su aliado 'hasta el final', por lealtad.",
+                    B: "Neutralidad.",
+                    C: "Independencia.",
+                    D: "Conveniencia."
+                },
+                correct: "A"
+            },
+            {
+                category: "Control 8 - Schmitt",
+                question: "Según Schmitt, ¿por qué el Führer asume el papel de juez supremo?",
+                options: {
+                    A: "Tribunales lentos.",
+                    B: "Porque solo él, como líder del movimiento, puede ejercer la justicia en nombre de la unidad del pueblo.",
+                    C: "Estado liberal le otorgó autoridad.",
+                    D: "Ejército delegó poder."
+                },
+                correct: "B"
+            },
+            {
+                category: "Control 8 - Lenin",
+                question: "Para Lenin, la moral comunista se diferencia de la burguesa porque:",
+                options: {
+                    A: "Principios universales.",
+                    B: "Se subordina a los intereses de la lucha de clases del proletariado.",
+                    C: "Valores tradicionales.",
+                    D: "Conciliación capital/trabajo."
+                },
+                correct: "B"
+            },
+            {
+                category: "Control 8 - Hitler",
+                question: "Según Hitler, ¿qué objetivo debe tener un nuevo movimiento ideológico?",
+                options: {
+                    A: "Clarificar y unificar la concepción del Estado.",
+                    B: "Expandir religión.",
+                    C: "Suprimir sindicatos.",
+                    D: "Rechazar organización."
+                },
+                correct: "A"
+            },
+            {
+                category: "Control 8 - Michels",
+                question: "Según Michels, ¿qué significa 'representar' a la masa en el sistema actual?",
+                options: {
+                    A: "Que los deseos puramente intelectuales del representante son aceptados como voluntad de la masa (absurdo).",
+                    B: "Autoridad breve.",
+                    C: "Líder sintetiza problemas.",
+                    D: "Representación imposible."
+                },
+                correct: "A"
+            },
+            {
+                category: "Control 8 - Sorel",
+                question: "Según Sorel, ¿cómo se distingue una 'utopía' de un 'mito' en relación a la refutación?",
+                options: {
+                    A: "Mito discutible.",
+                    B: "La utopía puede discutirse/refutarse (intelectual), el mito no (es convicción de grupo/expresión de voluntad).",
+                    C: "Utopía destrucción.",
+                    D: "Mito intelectual."
+                },
+                correct: "B"
+            },
+            {
+                category: "Control 8 - Schmitt",
+                question: "Según Schmitt, ¿qué implicó el ascenso del Führer en 1933?",
+                options: {
+                    A: "El inicio de un nuevo régimen que reemplazó el sistema de Weimar.",
+                    B: "Restauración imperio.",
+                    C: "Reforma administrativa.",
+                    D: "Nuevo gobierno mismo sistema."
+                },
+                correct: "A"
+            },
+            {
+                category: "Control 8 - Malatesta",
+                question: "Según Malatesta, ¿cuál es el problema de la 'dictadura de los mejores'?",
+                options: {
+                    A: "Que los dictadores se ocuparían en defenderse y mantener su poder.",
+                    B: "Mejores no interesados.",
+                    C: "Mayoría tiene razón.",
+                    D: "Imposible identificar mejores."
+                },
+                correct: "A"
+            },
+            {
+                category: "Control 8 - Mussolini",
+                question: "En el discurso de Mussolini, ¿qué mensaje se da al pueblo italiano?",
+                options: {
+                    A: "Mantenerse al margen.",
+                    B: "Emigrar.",
+                    C: "Un llamado a las armas: 'VENCER' para asegurar paz con justicia.",
+                    D: "Solo élites participan."
+                },
+                correct: "C"
+            },
+            {
+                category: "Control 8 - Lenin",
+                question: "En '¿Qué hacer?', Lenin critica a los dirigentes del tercer período porque:",
+                options: {
+                    A: "Despreciaban la teoría y justificaban su atraso.",
+                    B: "Rigor teórico.",
+                    C: "Formación universitaria.",
+                    D: "Organización militar."
+                },
+                correct: "A"
+            },
+            {
+                category: "Control 8 - Hitler",
+                question: "Según Hitler, el movimiento sindicalista es:",
+                options: {
+                    A: "Colaborador en la mejora de la salud social nacional.",
+                    B: "Antipatriótico.",
+                    C: "Opositor.",
+                    D: "Secundario."
+                },
+                correct: "A"
+            },
+            {
+                category: "Control 8 - Michels",
+                question: "Según Michels, ¿cuál es la función de las consideraciones morales/éticas en la democracia?",
+                options: {
+                    A: "Voluntad objetiva.",
+                    B: "Modelo ideal.",
+                    C: "Servir como arma para disfrazar los verdaderos fines (hablar en nombre del pueblo).",
+                    D: "Asegurar ideal."
+                },
+                correct: "C"
+            },
+            {
+                category: "Control 8 - Sorel",
+                question: "Según Sorel, ¿qué ventaja moral aporta la violencia proletaria?",
+                options: {
+                    A: "Burocracia revolucionaria.",
+                    B: "Engendra una nueva civilización de productores y elimina celos/venganza.",
+                    C: "Garantiza barbarie.",
+                    D: "Felicidad futura."
+                },
+                correct: "B"
+            },
+            {
+                category: "Control 8 - Marinetti",
+                question: "Según Marinetti, ¿cuál es la 'única higiene del mundo'?",
+                options: {
+                    A: "Militarismo.",
+                    B: "Desprecio mujer.",
+                    C: "Gesto destructor.",
+                    D: "La guerra."
+                },
+                correct: "D"
+            },
+            {
+                category: "Control 8 - Mussolini",
+                question: "¿Cómo 'redefine' el fascismo la noción de democracia?",
+                options: {
+                    A: "Deliberativa.",
+                    B: "Representativa.",
+                    C: "Como una democracia organizada, centralizada y autoritaria.",
+                    D: "Directa."
+                },
+                correct: "C"
+            },
+            {
+                category: "Control 8 - Michels",
+                question: "¿Qué paradoja describe Michels sobre la forma y sustancia de la vida partidaria?",
+                options: {
+                    A: "Democracia aristocrática.",
+                    B: "Forma externa oligárquica.",
+                    C: "Sustancia socialista oligárquica.",
+                    D: "La aristocracia se presenta con apariencia democrática, y la democracia tiene sustancia aristocrática."
+                },
+                correct: "D"
+            },
+            {
+                category: "Control 8 - Sorel",
+                question: "¿Cómo se describe la idea de huelga general según Sorel?",
+                options: {
+                    A: "Sistema de imágenes.",
+                    B: "Utopía limpia.",
+                    C: "Ruptura comercial.",
+                    D: "Como un mito que es un fenómeno de guerra (batalla napoleónica) que suprime el régimen."
+                },
+                correct: "D"
+            },
+            {
+                category: "Control 8 - Sorel",
+                question: "Según Sorel, ¿cuál es el rol de los intelectuales?",
+                options: {
+                    A: "Organizar trabajo.",
+                    B: "Analizar mitos.",
+                    C: "Influencia directa.",
+                    D: "Deben limitarse a negar el pensamiento burgués (no dirigir al proletariado)."
+                },
+                correct: "D"
+            },
+            {
+                category: "Control 8 - Hitler",
+                question: "¿Cuál es la idea central sobre Estado y Cultura en Hitler?",
+                options: {
+                    A: "Estado creador.",
+                    B: "La cultura depende de la raza, no del Estado (Estado es el continente, raza el contenido).",
+                    C: "Estado garantiza progreso.",
+                    D: "Cultura al margen."
+                },
+                correct: "B"
+            },
+            {
+                category: "Control 8 - Luxemburgo",
+                question: "En el texto de Luxemburgo, el capital internacional es llamado 'Baal'. ¿Qué función cumple la metáfora?",
+                options: {
+                    A: "Denunciar al capitalismo como fuerza voraz/sacrificial.",
+                    B: "Exaltar capitalistas.",
+                    C: "Deidad benevolente.",
+                    D: "Minimizar responsabilidad."
+                },
+                correct: "A"
+            },
+            {
+                category: "Control 8 - Michels",
+                question: "Según Michels, una vez que la organización se establece, ¿qué peligro trae?",
+                options: {
+                    A: "Es el manantial de corrientes conservadoras (supremacía de masas ilusoria).",
+                    B: "Clase trabajadora fuerte.",
+                    C: "Desorganización.",
+                    D: "Sumisión."
+                },
+                correct: "A"
+            },
+            {
+                category: "Control 8 - Lenin",
+                question: "Según Lenin (Juventudes Comunistas), ¿qué debe reemplazar la vieja escuela?",
+                options: {
+                    A: "Enseñanza memorista.",
+                    B: "Educación religiosa.",
+                    C: "Un sistema que promueva la disciplina consciente y asimilación crítica.",
+                    D: "Conocimiento técnico."
+                },
+                correct: "C"
+            },
+            {
+                category: "Control 8 - Schmitt",
+                question: "Según Schmitt, ¿qué representa Hitler para Alemania?",
+                options: {
+                    A: "Político liberal.",
+                    B: "Juez internacional.",
+                    C: "Un líder que encarna las advertencias de la historia y busca fundar un nuevo orden.",
+                    D: "Militar restaurador."
+                },
+                correct: "C"
+            },
+            {
+                category: "Control 8 - Luxemburgo",
+                question: "¿Cómo se posiciona la Liga Espartaco frente a partidos que pactan con la burguesía?",
+                options: {
+                    A: "La critica y rechaza compartir el poder con quienes traicionen principios.",
+                    B: "Indiferente.",
+                    C: "Apoya.",
+                    D: "Fusión."
+                },
+                correct: "A"
+            },
+
+            // CONTROL 9
+            {
+                category: "Control 9 - León XIII",
+                question: "Según Rerum Novarum (León XIII), ¿por qué se rechazan tanto el socialismo como el liberalismo extremo?",
+                options: {
+                    A: "No consideran riqueza.",
+                    B: "Intervención exclusiva Iglesia.",
+                    C: "Que uno niega la propiedad privada y el otro abandona al trabajador a la explotación (ambos fallan en dignidad).",
+                    D: "Elevan obrero sobre familia."
+                },
+                correct: "C"
+            },
+            {
+                category: "Control 9 - Maritain",
+                question: "Según Maritain, ¿qué significa que los derechos humanos sean inalienables?",
+                options: {
+                    A: "Que no se pueden quitar ni renunciar a ellos.",
+                    B: "No se pueden juntar.",
+                    C: "No hay jerarquía.",
+                    D: "No garantizables."
+                },
+                correct: "A"
+            },
+            {
+                category: "Control 9 - Toffler/Rand",
+                question: "Según Toffler, ¿qué simbolizaba el signo de dólar en la novela de Ayn Rand?",
+                options: {
+                    A: "Libertarismo.",
+                    B: "Cadenas.",
+                    C: "El libre comercio y una mente libre.",
+                    D: "Ruptura soviética."
+                },
+                correct: "C"
+            },
+            {
+                category: "Control 9 - Hayek",
+                question: "Según Hayek, ¿qué tuvieron en común Alemania, Italia y Rusia en el surgimiento de totalitarismos?",
+                options: {
+                    A: "Liberalismo.",
+                    B: "Prusianismo.",
+                    C: "Nacionalismo.",
+                    D: "Predominio de ideas socialistas."
+                },
+                correct: "D"
+            },
+            {
+                category: "Control 9 - Hayek",
+                question: "Según Hayek ('Uso del conocimiento'), ¿cuál es el problema central de toda economía?",
+                options: {
+                    A: "Falta recursos.",
+                    B: "Desigualdad.",
+                    C: "La utilización del conocimiento disperso entre los individuos.",
+                    D: "Regulación."
+                },
+                correct: "C"
+            },
+            {
+                category: "Control 9 - Murray",
+                question: "Según Murray, ¿cuál es la dificultad para definir el neoconservadurismo?",
+                options: {
+                    A: "Tabú extrema derecha.",
+                    B: "No tiene un manifiesto ni principios claros compartidos por todos.",
+                    C: "Solo Leo Strauss.",
+                    D: "Contradicción."
+                },
+                correct: "B"
+            },
+            {
+                category: "Control 9 - León XIII",
+                question: "Según Rerum Novarum, ¿por qué la solución socialista (abolir propiedad) es perjudicial para el obrero?",
+                options: {
+                    A: "Obreros no educados.",
+                    B: "Estado incapaz.",
+                    C: "Violencia.",
+                    D: "Porque le quita al obrero el derecho de disponer de su salario y la esperanza de aumentar sus bienes."
+                },
+                correct: "D"
+            },
+            {
+                category: "Control 9 - Toffler/Rand",
+                question: "Según Toffler, ¿cómo define Ayn Rand el objetivismo?",
+                options: {
+                    A: "Razonamiento colectivo.",
+                    B: "Como una moral de interés propio racional.",
+                    C: "Subconsciente.",
+                    D: "Rechazo cristiano."
+                },
+                correct: "B"
+            },
+            {
+                category: "Control 9 - Hayek",
+                question: "Según Hayek, ¿qué función cumple el sistema de precios?",
+                options: {
+                    A: "Transmitir información sobre las condiciones cambiantes del mercado.",
+                    B: "Reemplazar comunicación.",
+                    C: "Ingresos Estado.",
+                    D: "Justicia social."
+                },
+                correct: "A"
+            },
+            {
+                category: "Control 9 - Murray",
+                question: "Según Murray, ¿qué característica tuvo el comienzo del neoconservadurismo (Strauss)?",
+                options: {
+                    A: "Fue una doctrina que se propagó inicialmente entre los alumnos de Strauss.",
+                    B: "Apoyo esporádico.",
+                    C: "Formalización pensamiento recurrente.",
+                    D: "Rechazada."
+                },
+                correct: "A"
+            },
+            {
+                category: "Control 9 - Hayek",
+                question: "Según Hayek, ¿por qué la planificación centralizada es ineficaz?",
+                options: {
+                    A: "Tecnología.",
+                    B: "Corrupción.",
+                    C: "Mercados no necesitan organización.",
+                    D: "Porque ningún planificador puede reunir todo el conocimiento necesario (disperso)."
+                },
+                correct: "D"
+            },
+            {
+                category: "Control 9 - Toffler/Rand",
+                question: "Según Toffler, ¿a qué se refiere Rand con 'el axioma de que la existencia existe'?",
+                options: {
+                    A: "Conciencia propia.",
+                    B: "Creación divina.",
+                    C: "Creación social.",
+                    D: "A que existe una realidad objetiva, independiente de cualquier perceptor."
+                },
+                correct: "D"
+            },
+            {
+                category: "Control 9 - Maritain",
+                question: "Según Maritain, ¿qué crítica hace a los movimientos positivistas/materialistas sobre derechos humanos?",
+                options: {
+                    A: "Tarde.",
+                    B: "Reniegan.",
+                    C: "Mucha importancia.",
+                    D: "Que son incapaces de establecer su existencia previo a las instituciones (fundamento)."
+                },
+                correct: "D"
+            },
+            {
+                category: "Control 9 - León XIII",
+                question: "Según Rerum Novarum, respecto a la dignidad del trabajo, este es:",
+                options: {
+                    A: "Mercancía.",
+                    B: "Personal y necesario (ligado a la dignidad).",
+                    C: "Evitable.",
+                    D: "Irrelevante."
+                },
+                correct: "B"
+            },
+            {
+                category: "Control 9 - Hayek",
+                question: "Según Hayek (Camino de Servidumbre), ¿qué regímenes nacen de tendencias socialistas?",
+                options: {
+                    A: "Fascismo y nazismo.",
+                    B: "Comunismo.",
+                    C: "Progresismo.",
+                    D: "Economía guerra."
+                },
+                correct: "A"
+            },
+            {
+                category: "Control 9 - Maritain",
+                question: "Según Maritain, ¿cuál es el rol del Estado frente a los derechos humanos?",
+                options: {
+                    A: "Otorgarlos.",
+                    B: "No tiene obligación.",
+                    C: "Garantizar, reconocer y sancionar.",
+                    D: "Cambiarlos."
+                },
+                correct: "C"
+            },
+            {
+                category: "Control 9 - Toffler/Rand",
+                question: "Según Toffler, ¿a qué se refiere Rand con 'desafiar la tradición cultural de 2000 años'?",
+                options: {
+                    A: "Ella representa una figura 'Sui Generis', ideas explosivas, exiliada académica.",
+                    B: "Retorno económico.",
+                    C: "Provocar.",
+                    D: "Reinterpretar clásicos."
+                },
+                correct: "A"
+            },
+            {
+                category: "Control 9 - Murray",
+                question: "Según Murray, ¿cómo se relacionan los textos clásicos con el neoconservadurismo?",
+                options: {
+                    A: "Obsoletos.",
+                    B: "Justificación exterior.",
+                    C: "Los textos clásicos sirven como modelos morales y políticos para fortalecer la democracia.",
+                    D: "Oposición."
+                },
+                correct: "C"
+            },
+            {
+                category: "Control 9 - Hayek",
+                question: "Según Hayek, el conocimiento económico relevante es:",
+                options: {
+                    A: "Centralizado.",
+                    B: "Disperso y particular.",
+                    C: "Uniforme.",
+                    D: "Expertos."
+                },
+                correct: "B"
+            },
+            {
+                category: "Control 9 - Hayek",
+                question: "En la introducción de Camino de Servidumbre, ¿qué preocupa a Hayek sobre Inglaterra?",
+                options: {
+                    A: "Defensa.",
+                    B: "Fuerzas libertad.",
+                    C: "Que el curso de ideas actual inglés es muy semejante al alemán pre-totalitario.",
+                    D: "Traición esperanzas."
+                },
+                correct: "C"
+            },
+            {
+                category: "Control 9 - León XIII",
+                question: "Según Rerum Novarum, ¿cómo se justifica la propiedad privada?",
+                options: {
+                    A: "Al aplicar su trabajo a la naturaleza, el hombre deja una 'huella' y la hace suya.",
+                    B: "Sostener iglesia.",
+                    C: "Derecho divino clases altas.",
+                    D: "Invención civil."
+                },
+                correct: "A"
+            },
+            {
+                category: "Control 9 - Hayek",
+                question: "Según Hayek, ¿por qué es importante comprender al enemigo y los ideales en juego (guerra)?",
+                options: {
+                    A: "Opinión unificada.",
+                    B: "Porque es necesario para rechazar a un enemigo que usa la propaganda como arma.",
+                    C: "Historia se repite.",
+                    D: "Gobierno engaña."
+                },
+                correct: "B"
+            },
+
+            // CONTROL 10
+            {
+                category: "Control 10 - Hegel",
+                question: "Según Hegel, ¿por qué el filósofo no debe depender únicamente de los historiadores empíricos?",
+                options: {
+                    A: "Ignoran religión.",
+                    B: "No estudian antiguos.",
+                    C: "Fuentes incorrectas.",
+                    D: "Porque se limitan a los hechos sin comprender la razón que los guía."
+                },
+                correct: "D"
+            },
+            {
+                category: "Control 10 - Kojève",
+                question: "Según Kojève, ¿qué representa el Estado absoluto en Hegel?",
+                options: {
+                    A: "El reino terrenal donde se realiza el Reino de los Cielos cristiano (síntesis universal).",
+                    B: "Desaparición individuo.",
+                    C: "Triunfo materialismo.",
+                    D: "Utopía."
+                },
+                correct: "A"
+            },
+            {
+                category: "Control 10 - Fukuyama",
+                question: "Según Fukuyama, ¿qué desean realmente los conservadores que se oponen a Gorbachov?",
+                options: {
+                    A: "Marxismo.",
+                    B: "Tradición, orden y autoridad.",
+                    C: "Arrendamientos.",
+                    D: "Centralismo."
+                },
+                correct: "B"
+            },
+            {
+                category: "Control 10 - Huntington",
+                question: "Según Huntington, una manifestación de la decadencia moral en Occidente es:",
+                options: {
+                    A: "Ahorro.",
+                    B: "La decadencia familiar (divorcio, etc.).",
+                    C: "Interés intelectual.",
+                    D: "Reafirmación cristiana."
+                },
+                correct: "B"
+            },
+            {
+                category: "Control 10 - Huntington",
+                question: "Según Huntington, ¿qué es condición para la paz mundial?",
+                options: {
+                    A: "La comprensión y cooperación entre civilizaciones.",
+                    B: "Supremacía Occidente.",
+                    C: "Uniformidad.",
+                    D: "Orden único."
+                },
+                correct: "A"
+            },
+            {
+                category: "Control 10 - Hegel",
+                question: "Según Hegel, ¿qué elemento elimina la filosofía en su consideración de la historia?",
+                options: {
+                    A: "Racional.",
+                    B: "Religioso.",
+                    C: "Lo contingente o accidental.",
+                    D: "Político."
+                },
+                correct: "C"
+            },
+            {
+                category: "Control 10 - Kojève",
+                question: "Según Kojève, ¿qué representa Napoleón?",
+                options: {
+                    A: "Amo pagano.",
+                    B: "El hombre que realiza el ideal de la Individualidad en el mundo real.",
+                    C: "Orgullo.",
+                    D: "Fin Estado."
+                },
+                correct: "B"
+            },
+            {
+                category: "Control 10 - Fukuyama",
+                question: "Según Fukuyama, ¿qué evento usó Hegel (según Kojève) para el fin de la historia?",
+                options: {
+                    A: "La derrota de la monarquía prusiana en 1806 (Batalla de Jena).",
+                    B: "Primera Guerra Mundial.",
+                    C: "Caída Muro Berlín.",
+                    D: "Revolución Francesa."
+                },
+                correct: "A"
+            },
+            {
+                category: "Control 10 - Huntington",
+                question: "Según Huntington, ¿en qué fase está entrando Occidente (Imperio Universal/cooperación)?",
+                options: {
+                    A: "Invasión.",
+                    B: "Decadencia.",
+                    C: "Edad Dorada.",
+                    D: "Gestación."
+                },
+                correct: "C"
+            },
+            {
+                category: "Control 10 - Huntington",
+                question: "Según Huntington, ¿qué es esencial para que una civilización exista?",
+                options: {
+                    A: "La existencia de ley y orden.",
+                    B: "Tecnología.",
+                    C: "Economía.",
+                    D: "Territorio."
+                },
+                correct: "A"
+            },
+            {
+                category: "Control 10 - Hegel",
+                question: "Según Hegel, ¿Qué rige el curso de la historia universal?",
+                options: {
+                    A: "Pasiones.",
+                    B: "Una razón divina y absoluta.",
+                    C: "Voluntad.",
+                    D: "Azar."
+                },
+                correct: "B"
+            },
+            {
+                category: "Control 10 - Kojève",
+                question: "Según Kojève, en el cristianismo primitivo, la individualidad es:",
+                options: {
+                    A: "Divinación.",
+                    B: "Encarnación dios.",
+                    C: "Negación alma.",
+                    D: "Encarnación de Dios (pero en el más allá, no aquí)."
+                },
+                correct: "D"
+            },
+            {
+                category: "Control 10 - Fukuyama",
+                question: "Según Fukuyama, ¿qué desafíos ideológicos al liberalismo están derrotados?",
+                options: {
+                    A: "Absolutismo.",
+                    B: "Religión.",
+                    C: "Marxismo.",
+                    D: "El desafío del fascismo y el comunismo."
+                },
+                correct: "D"
+            },
+            {
+                category: "Control 10 - Huntington",
+                question: "Según Huntington, la evolución de Occidente no se ha apartado de:",
+                options: {
+                    A: "Hegemonía.",
+                    B: "Las leyes evolutivas comunes a las civilizaciones.",
+                    C: "Multiculturalismo.",
+                    D: "Universalismo."
+                },
+                correct: "B"
+            },
+            {
+                category: "Control 10 - Huntington",
+                question: "Según Huntington, ¿qué valores comparten las religiones?",
+                options: {
+                    A: "Algunos principios éticos básicos comunes.",
+                    B: "Ninguno.",
+                    C: "Económicos.",
+                    D: "Obediencia."
+                },
+                correct: "A"
+            },
+            {
+                category: "Control 10 - Hegel",
+                question: "Según Hegel, ¿por qué critica a los historiadores 'de oficio'?",
+                options: {
+                    A: "Fuentes.",
+                    B: "Juicios morales.",
+                    C: "Porque caen en apriorismos subjetivos.",
+                    D: "Providencia."
+                },
+                correct: "C"
+            },
+            {
+                category: "Control 10 - Kojève",
+                question: "Según Kojève, ¿por qué el esclavo cristiano no alcanza la libertad plena?",
+                options: {
+                    A: "Dependencia amo.",
+                    B: "No reconoce su propio valor humano y se somete a un Dios trascendente (libertad en el más allá).",
+                    C: "No trabaja.",
+                    D: "Rechaza moral."
+                },
+                correct: "B"
+            },
+            {
+                category: "Control 10 - Fukuyama",
+                question: "Según Fukuyama, ¿qué caracteriza al 'estado homogéneo universal'?",
+                options: {
+                    A: "Militar.",
+                    B: "Es protector de la libertad y democrático (sin contradicciones).",
+                    C: "Satisfecho.",
+                    D: "Ideal."
+                },
+                correct: "B"
+            },
+            {
+                category: "Control 10 - Huntington",
+                question: "Según Huntington, ¿qué fuerzas externas amenazan a Occidente?",
+                options: {
+                    A: "Guerra fría.",
+                    B: "Comunismo/Fascismo.",
+                    C: "Decadencia.",
+                    D: "El resurgimiento islámico y el dinamismo económico de Asia."
+                },
+                correct: "D"
+            },
+            {
+                category: "Control 10 - Huntington",
+                question: "¿Qué propone Huntington como vía constructiva?",
+                options: {
+                    A: "Aislar.",
+                    B: "Imponer valores.",
+                    C: "Renunciar al universalismo y buscar atributos comunes.",
+                    D: "Cultura única."
+                },
+                correct: "C"
+            },
+            {
+                category: "Control 10 - Hegel",
+                question: "Según Hegel, ¿qué papel tiene el concepto/razón en la historia?",
+                options: {
+                    A: "Es la actividad que da sentido y forma a los acontecimientos.",
+                    B: "Interpreta.",
+                    C: "Secundaria.",
+                    D: "Subjetiva."
+                },
+                correct: "A"
+            },
+            {
+                category: "Control 10 - Kojève",
+                question: "Según Kojève, la historia se detiene cuando:",
+                options: {
+                    A: "Inmortalidad.",
+                    B: "Desaparece la oposición entre amo y esclavo.",
+                    C: "Teología.",
+                    D: "Decadencia."
+                },
+                correct: "B"
+            },
+            {
+                category: "Control 10 - Fukuyama",
+                question: "Según Fukuyama, ¿por qué disminuye la productividad al elevar tarifas a campesinos tradicionales?",
+                options: {
+                    A: "Porque valoraban más el ocio que su renta (falta de deseo de acumulación).",
+                    B: "Conciencia determinada.",
+                    C: "Temor.",
+                    D: "Irrelevancia."
+                },
+                correct: "A"
+            },
+            {
+                category: "Control 10 - Huntington",
+                question: "Según Huntington, ¿cómo describe las etapas de evolución?",
+                options: {
+                    A: "Espontánea.",
+                    B: "Estable.",
+                    C: "Lineal.",
+                    D: "Nace vigorosa, alcanza una edad dorada y luego decae."
+                },
+                correct: "D"
+            },
+            {
+                category: "Control 10 - Hegel",
+                question: "Según Hegel, ¿qué diferencia a la historia pragmática de la filosofía de la historia?",
+                options: {
+                    A: "Hechos vs negación.",
+                    B: "La historia pragmática busca causas externas, la filosofía parte del concepto racional.",
+                    C: "Empírica.",
+                    D: "Detalle."
+                },
+                correct: "B"
+            },
+            {
+                category: "Control 10 - Kojève",
+                question: "Según Kojève, ¿qué representa el esclavo cristiano en el desarrollo de la individualidad?",
+                options: {
+                    A: "Emancipación.",
+                    B: "Sumisión.",
+                    C: "El descubrimiento inicial del valor absoluto del individuo.",
+                    D: "Restauración."
+                },
+                correct: "C"
+            },
+            {
+                category: "Control 10 - Fukuyama",
+                question: "Según Fukuyama, ¿cuál es el concepto hegeliano central para el cambio histórico?",
+                options: {
+                    A: "Historicismo.",
+                    B: "La historia como un proceso dialéctico con final.",
+                    C: "Intencionalidad.",
+                    D: "Dominio."
+                },
+                correct: "B"
+            },
+            {
+                category: "Control 10 - Huntington",
+                question: "Según Huntington, ¿qué distingue a Occidente?",
+                options: {
+                    A: "Evitar conflicto.",
+                    B: "El inicio de los procesos de modernización e industrialización.",
+                    C: "Valores asiáticos.",
+                    D: "Ausencia herencia."
+                },
+                correct: "B"
+            },
+            {
+                category: "Control 10 - Huntington",
+                question: "Según Huntington, ¿diferencia entre Singapur y Occidente?",
+                options: {
+                    A: "En Singapur se privilegia la colectividad; en Occidente, el individuo.",
+                    B: "Consenso.",
+                    C: "Religión.",
+                    D: "Familia."
+                },
+                correct: "A"
+            },
+            {
+                category: "Control 10 - Hegel",
+                question: "Según Hegel, ¿qué fin debe buscarse en la historia?",
+                options: {
+                    A: "Felicidad.",
+                    B: "El fin último del mundo, comprendido por la razón (libertad).",
+                    C: "Conservación.",
+                    D: "Explicación."
+                },
+                correct: "B"
+            },
+            {
+                category: "Control 10 - Kojève",
+                question: "Según Kojève, ¿qué transforma el saber de Hegel en 'saber absoluto'?",
+                options: {
+                    A: "Mitología.",
+                    B: "La revelación de la realidad de Napoleón como Dios manifestado en la historia (fin de la historia).",
+                    C: "Negación razón.",
+                    D: "Abolición."
+                },
+                correct: "B"
+            },
+            {
+                category: "Control 10 - Huntington",
+                question: "Según Huntington, ¿qué caracteriza la decadencia económica (Quigley)?",
+                options: {
+                    A: "Comercio.",
+                    B: "La aplicación del excedente a fines no productivos (ego, consumo) en vez de innovación.",
+                    C: "Barreras.",
+                    D: "Inversión."
+                },
+                correct: "B"
+            },
+            {
+                category: "Control 10 - Kojève",
+                question: "Según Kojève, la individualidad en Hegel es:",
+                options: {
+                    A: "Individuo aislado.",
+                    B: "La síntesis de lo particular y lo universal.",
+                    C: "Negación universal.",
+                    D: "Rechazo absoluto."
+                },
+                correct: "B"
+            },
+            {
+                category: "Control 10 - Fukuyama",
+                question: "Según Fukuyama, ¿dónde ha triunfado el liberalismo fundamentalmente?",
+                options: {
+                    A: "En la esfera de la conciencia y de las ideas.",
+                    B: "Mundo real.",
+                    C: "Militar.",
+                    D: "Tecnología."
+                },
+                correct: "A"
+            },
+            {
+                category: "Control 10 - Huntington",
+                question: "Según Huntington, ¿qué pasa con sociedades que creen que su historia terminó?",
+                options: {
+                    A: "Su historia está a punto de empezar a declinar.",
+                    B: "Imperio universal.",
+                    C: "Liderazgo.",
+                    D: "Renacimiento."
+                },
+                correct: "A"
+            },
+            {
+                category: "Control 10 - Huntington",
+                question: "Según Huntington, ¿qué es el 'universalismo'?",
+                options: {
+                    A: "Aceptación.",
+                    B: "La idea de que los valores de Occidente son válidos para todo el mundo.",
+                    C: "Gobierno mundial.",
+                    D: "Diversidad."
+                },
+                correct: "B"
+            },
+            {
+                category: "Control 10 - Kojève",
+                question: "Según Alexander Kojeve, ¿cuál es el origen y el fondo del Cristianismo en Hegel?",
+                options: {
+                    A: "Revelación.",
+                    B: "La idea de la Individualidad descubierta por el esclavo.",
+                    C: "Victoria espíritu.",
+                    D: "Compasión."
+                },
+                correct: "B"
+            },
+            {
+                category: "Control 10 - Fukuyama",
+                question: "Según Fukuyama, ¿qué proceso está en movimiento más allá de la guerra fría?",
+                options: {
+                    A: "Retorno.",
+                    B: "El fin de la historia y la evolución ideológica.",
+                    C: "Culminación posguerra.",
+                    D: "Nueva era."
+                },
+                correct: "B"
+            },
+            {
+                category: "Control 10 - Huntington",
+                question: "Según Huntington (Toynbee), ¿cómo se percibe la civilización al aparecer el Estado universal?",
+                options: {
+                    A: "Como la Tierra prometida, la meta de los esfuerzos.",
+                    B: "Península.",
+                    C: "Invasión.",
+                    D: "Teodicea."
+                },
+                correct: "A"
+            },
+            {
+                category: "Control 10 - Huntington",
+                question: "Según Huntington, ¿cuál es el peligro del multiculturalismo en EE.UU.?",
+                options: {
+                    A: "Nacionalismo.",
+                    B: "Que amenaza la unidad cultural y la identidad occidental.",
+                    C: "Exclusión.",
+                    D: "Expansionismo."
+                },
+                correct: "B"
+            },
+            {
+                category: "Control 10 - Kojève",
+                question: "Según Kojève, ¿qué implica 'suprimir la Religión'?",
+                options: {
+                    A: "Rechazar espiritualidad.",
+                    B: "Destruir individualidad.",
+                    C: "Liberar al Hombre de los restos de la servidumbre teológica y pagana (realizar el absoluto aquí).",
+                    D: "Sustituir por arte."
+                },
+                correct: "C"
+            },
+            {
+                category: "Control 10 - Fukuyama",
+                question: "Según Fukuyama, ¿error común al ignorar la conciencia?",
+                options: {
+                    A: "Negar materialismo.",
+                    B: "Confundir causa.",
+                    C: "Atribuir causas materiales a fenómenos de naturaleza ideal.",
+                    D: "Religión superestructura."
+                },
+                correct: "C"
+            },
+            {
+                category: "Control 10 - Huntington",
+                question: "Según Huntington (Quigley), una de las 7 fases es:",
+                options: {
+                    A: "Estancamiento.",
+                    B: "Mezcla.",
+                    C: "Globalización.",
+                    D: "Consenso."
+                },
+                correct: "B"
+            },
+            {
+                category: "Control 10 - Fukuyama",
+                question: "Según Fukuyama, ¿qué consecuencia ambivalente trae el fin de la historia?",
+                options: {
+                    A: "El reemplazo de la audacia por la resolución de problemas (aburrimiento).",
+                    B: "Resurgimiento héroes.",
+                    C: "Arte económico.",
+                    D: "Ideología vigorosa."
+                },
+                correct: "A"
+            },
+            {
+                category: "Control 10 - Huntington",
+                question: "Según Huntington, ¿qué permite que una civilización crezca (Quigley)?",
+                options: {
+                    A: "Excedentes consumo.",
+                    B: "Un «instrumento de expansión» que invierte excedentes en innovación.",
+                    C: "Ocio.",
+                    D: "Inversión índice."
+                },
+                correct: "B"
+            },
+            {
+                category: "Control 10 - Huntington",
+                question: "Según Huntington, ¿relación modernización-civilización?",
+                options: {
+                    A: "La modernización mejora lo material, pero no siempre lo moral (no implica occidentalización).",
+                    B: "Idénticos.",
+                    C: "Destruye.",
+                    D: "Consecuencia."
+                },
+                correct: "A"
+            },
+
+            // SOLEMNES (Varios)
+            {
+                category: "Solemne - Antigüedad",
+                question: "En 'La guerra del Peloponeso', ¿Qué representa para los guerreros de Esparta su ciudad, según el discurso de la embajada ateniense?",
+                options: {
+                    A: "Un lugar donde buscan evitar la guerra.",
+                    B: "Un reino que deben abandonar.",
+                    C: "Una carga pesada.",
+                    D: "Un espacio donde pueden ejercer hegemonía sobre otros pueblos y defender sus intereses con honor, temor e interés."
+                },
+                correct: "D"
+            },
+            {
+                category: "Solemne - Antigüedad",
+                question: "En La Ilíada, ¿Qué revela la escena del juicio en la ciudad pacífica del escudo de Aquiles sobre la justicia?",
+                options: {
+                    A: "Depende de la fuerza.",
+                    B: "Sin participación.",
+                    C: "La autoridad se basa en deliberación y sabiduría colectiva.",
+                    D: "Castigo divino."
+                },
+                correct: "C"
+            },
+            {
+                category: "Solemne - Antigüedad",
+                question: "En La República de Platón, ¿por qué el filósofo está capacitado para gobernar?",
+                options: {
+                    A: "Porque busca el bien común con conocimiento.",
+                    B: "Riquezas.",
+                    C: "Habilidades militares.",
+                    D: "Sentir del pueblo."
+                },
+                correct: "A"
+            },
+            {
+                category: "Solemne - Antigüedad",
+                question: "Según Platón, ¿cuál es la virtud de los guardianes/guerreros?",
+                options: {
+                    A: "Prudencia.",
+                    B: "Templanza.",
+                    C: "Valentía.",
+                    D: "Justicia."
+                },
+                correct: "C"
+            },
+            {
+                category: "Solemne - Antigüedad",
+                question: "Según Heródoto (debate persa), ¿cuál es el argumento de Ótanes contra la monarquía?",
+                options: {
+                    A: "Que el monarca es propenso a la envidia y soberbia, y hace lo que quiere sin rendir cuentas.",
+                    B: "Impide prosperidad.",
+                    C: "Fomenta guerra.",
+                    D: "Carece sabiduría."
+                },
+                correct: "A"
+            },
+            {
+                category: "Solemne - Antigüedad",
+                question: "Según Hesíodo ('Trabajos y días'), ¿cuál es el propósito de la lucha útil?",
+                options: {
+                    A: "Acrecentar guerra.",
+                    B: "Despertar la envidia del vecino para que se afane y trabaje.",
+                    C: "Incentivar ocio.",
+                    D: "Engañar."
+                },
+                correct: "B"
+            },
+            {
+                category: "Solemne - Historia",
+                question: "Según Holland, ¿Qué poder imperial permitió a los judíos regresar y reconstruir el Templo?",
+                options: {
+                    A: "El Imperio Persa (Ciro).",
+                    B: "Romano.",
+                    C: "Egipcio.",
+                    D: "Asirio."
+                },
+                correct: "A"
+            },
+            {
+                category: "Solemne - Historia",
+                question: "Según Filón, ¿de qué regla se apartaban los judíos respecto a Cayo (Calígula)?",
+                options: {
+                    A: "Aceptar muerte.",
+                    B: "Cuestionar costumbre.",
+                    C: "Rendirle pleitesía y glorificarlo más de la medida (rechazaban adorarlo como dios).",
+                    D: "Enfrentamiento."
+                },
+                correct: "C"
+            },
+            {
+                category: "Solemne - Historia",
+                question: "Según Flavio Josefo, ¿qué hace a una persona grata a Dios?",
+                options: {
+                    A: "Vivir en familia.",
+                    B: "Tener a la sociedad en más aprecio que su propia vida (observancia de la ley).",
+                    C: "Oración.",
+                    D: "Esculturas."
+                },
+                correct: "B"
+            },
+            {
+                category: "Solemne - Historia",
+                question: "Según Flavio Josefo, ¿cuál es la base de la identidad judía?",
+                options: {
+                    A: "Militar.",
+                    B: "La adhesión a una sola deidad (monoteísmo).",
+                    C: "Filosofía.",
+                    D: "Economía."
+                },
+                correct: "B"
+            },
+            {
+                category: "Solemne - Historia",
+                question: "Según Filón, ¿cuál era la virtud de las leyes de Moisés?",
+                options: {
+                    A: "Que eran leyes perfectas, que reflejaban la ley de la naturaleza.",
+                    B: "Exclusivas.",
+                    C: "Tradición oral.",
+                    D: "Adaptadas."
+                },
+                correct: "A"
+            },
+            {
+                category: "Solemne - Biblia",
+                question: "En la Torah (Caín y Abel), ¿diferencia en las ofrendas?",
+                options: {
+                    A: "Caín ofreció frutos, Abel primogénitos y grasa (lo mejor).",
+                    B: "Cantidad.",
+                    C: "Tamaño.",
+                    D: "Tipo animal."
+                },
+                correct: "A"
+            },
+            {
+                category: "Solemne - Teología",
+                question: "Según Lactancio, ¿cuál sería la primera nación en sufrir el fin de los tiempos?",
+                options: {
+                    A: "Egipto.",
+                    B: "Israel.",
+                    C: "Roma.",
+                    D: "China."
+                },
+                correct: "A"
+            },
+            {
+                category: "Solemne - Historia",
+                question: "En 'Vida de Constantino' (Eusebio), ¿cómo es descrito 'el tirano'?",
+                options: {
+                    A: "Un gobernante que defendía el culto pagano, ridiculizando y persiguiendo al cristianismo.",
+                    B: "Líder pagano respetuoso.",
+                    C: "Débil.",
+                    D: "Reformador."
+                },
+                correct: "A"
+            },
+            {
+                category: "Solemne - Agustín",
+                question: "En 'Ciudad de Dios' (Agustín), ¿qué hace felices a los emperadores?",
+                options: {
+                    A: "El reinar justamente.",
+                    B: "Reinar largo tiempo.",
+                    C: "Dejar reino a hijos.",
+                    D: "Guardarse de rebeliones."
+                },
+                correct: "A"
+            },
+            {
+                category: "Solemne - Roma",
+                question: "Según Marco Aurelio, ¿qué admiraba de su padre (Antonino Pío)?",
+                options: {
+                    A: "Sumisión.",
+                    B: "Delegaba.",
+                    C: "Combinación de firmeza y mansedumbre (metódico, sereno).",
+                    D: "Austeridad extrema."
+                },
+                correct: "C"
+            },
+            {
+                category: "Solemne - Roma",
+                question: "Según Dion Casio (debate Agripa/Mecenas), ¿crítica a la monarquía?",
+                options: {
+                    A: "Falta experiencia.",
+                    B: "Disolución ejércitos.",
+                    C: "Conduce inevitablemente a la tiranía (arrogancia).",
+                    D: "No escucha."
+                },
+                correct: "C"
+            },
+            {
+                category: "Solemne - Polibio",
+                question: "Según Polibio, ¿ventaja de la República Romana?",
+                options: {
+                    A: "Democracia pura.",
+                    B: "Senado aristocrático.",
+                    C: "Monarquía fuerte.",
+                    D: "Constitución mixta (combina monarquía, aristocracia, democracia)."
+                },
+                correct: "D"
+            },
+            {
+                category: "Solemne - Edad Media",
+                question: "Según Marsilio de Padua ('Defensor de la Paz'), ¿quién define sentidos dudosos de la ley divina?",
+                options: {
+                    A: "Obispo.",
+                    B: "El concilio general de los fieles.",
+                    C: "Rey.",
+                    D: "Niños."
+                },
+                correct: "B"
+            },
+            {
+                category: "Solemne - Edad Media",
+                question: "En la Bula Unam Sanctam (Bonifacio VIII), someterse al Papa es:",
+                options: {
+                    A: "Necesario para la salvación.",
+                    B: "Innecesario.",
+                    C: "Deber solo del clero.",
+                    D: "Para recibir espíritu."
+                },
+                correct: "A"
+            },
+            {
+                category: "Solemne - Edad Media",
+                question: "Según Inocencio III (Sol y Luna), ¿cuál es superior?",
+                options: {
+                    A: "Iguales.",
+                    B: "La autoridad papal es superior (Sol) pues da esplendor al poder real (Luna).",
+                    C: "Real superior.",
+                    D: "Real superior por cercanía."
+                },
+                correct: "B"
+            },
+            {
+                category: "Solemne - Maquiavelo",
+                question: "Según Maquiavelo, ¿causa de la pérdida de estados en Italia?",
+                options: {
+                    A: "Falta mercenarios.",
+                    B: "Excesiva confianza en la fortuna, falta de prudencia, incapacidad de adaptarse.",
+                    C: "Amenaza vecina.",
+                    D: "Nuevas tecnologías."
+                },
+                correct: "B"
+            },
+            {
+                category: "Solemne - Tomás de Aquino",
+                question: "Según Tomás de Aquino, ¿por qué se necesita un solo príncipe (monarquía)?",
+                options: {
+                    A: "Leyes divinas.",
+                    B: "Economía.",
+                    C: "Para guiar a la multitud al bien común y asegurar la unidad y la paz (eficacia).",
+                    D: "Defensa."
+                },
+                correct: "C"
+            },
+            {
+                category: "Solemne - Edad Media",
+                question: "Según Marsilio de Padua, ¿autoridad para elegir príncipe?",
+                options: {
+                    A: "Obispos.",
+                    B: "Únicamente la voluntad del legislador (el pueblo) expresada a través de la elección.",
+                    C: "Papa.",
+                    D: "Emperador."
+                },
+                correct: "B"
+            },
+            {
+                category: "Solemne - Modernidad",
+                question: "Según Berlin ('Dos conceptos de libertad'), ¿peligro de la libertad positiva ('verdadero yo')?",
+                options: {
+                    A: "Que autoriza ignorar los deseos reales y coaccionar 'por el bien propio' (tiranía).",
+                    B: "Impide educación.",
+                    C: "Relativismo.",
+                    D: "Elimina deber."
+                },
+                correct: "A"
+            },
+            {
+                category: "Solemne - Mill",
+                question: "Según Mill ('Sobre la libertad'), diferencia entre descrédito social y reprobación moral:",
+                options: {
+                    A: "Derechos vs defectos.",
+                    B: "El descrédito corresponde a defectos privados (que no afectan a otros); la reprobación, a daños hacia otros.",
+                    C: "Legal vs social.",
+                    D: "Inevitable vs optativa."
+                },
+                correct: "B"
+            },
+            {
+                category: "Solemne - Bossuet",
+                question: "Según Bossuet, 'Desperdigar el poder es dividir el Estado', ¿qué critica?",
+                options: {
+                    A: "Tiranía.",
+                    B: "La división del poder político en distintas instituciones (defiende absolutismo).",
+                    C: "Desobediencia.",
+                    D: "Debilidad."
+                },
+                correct: "B"
+            },
+            {
+                category: "Solemne - Locke",
+                question: "Según Locke (Cap. 5), ¿qué transforma bien común en propiedad?",
+                options: {
+                    A: "El trabajo.",
+                    B: "Deseo.",
+                    C: "Autorización.",
+                    D: "Escasez."
+                },
+                correct: "A"
+            },
+            {
+                category: "Solemne - Locke",
+                question: "Según Locke, si la tierra es común, ¿cómo se justifica la apropiación?",
+                options: {
+                    A: "Acuerdo colectivo.",
+                    B: "Mercado.",
+                    C: "Comunidad absoluta.",
+                    D: "El uso y aprovechamiento individual justifican la apropiación (trabajo agrega valor)."
+                },
+                correct: "D"
+            },
+            {
+                category: "Solemne - Tucídides",
+                question: "Según el Discurso Fúnebre de Pericles (Tucídides), ¿características de Atenas?",
+                options: {
+                    A: "Mérito personal, juegos/fiestas, confianza en el carácter/valor.",
+                    B: "Solo I.",
+                    C: "Solo I y II.",
+                    D: "I, II y III."
+                },
+                correct: "D"
+            },
+            {
+                category: "Solemne - Jenofonte",
+                question: "Según Jenofonte ('Hierón'), ¿cómo puede el tirano ser amado?",
+                options: {
+                    A: "Poder militar.",
+                    B: "Lejanía.",
+                    C: "Que gaste su fortuna en obras públicas (bien común) en lugar de lujos.",
+                    D: "Castigo."
+                },
+                correct: "C"
+            },
+            {
+                category: "Solemne - Tucídides",
+                question: "En el diálogo de los Melios (Tucídides), ¿postura ateniense?",
+                options: {
+                    A: "Justicia sobre poder.",
+                    B: "Moral.",
+                    C: "Fuerza secundaria.",
+                    D: "El derecho solo existe entre iguales; los fuertes hacen lo que pueden, los débiles sufren lo que deben."
+                },
+                correct: "D"
+            },
+            {
+                category: "Solemne - Biblia",
+                question: "Según Isaías, 'Jehová te será por luz perpetua', significa:",
+                options: {
+                    A: "Supremacía de la presencia divina sobre fuerzas naturales.",
+                    B: "Castigo.",
+                    C: "Astronomía.",
+                    D: "Fin ciclo."
+                },
+                correct: "A"
+            },
+            {
+                category: "Solemne - Holland",
+                question: "Según Holland ('Dominio'), ¿qué fue escandaloso para los paganos sobre el cristianismo?",
+                options: {
+                    A: "Que un hombre crucificado fuera Dios.",
+                    B: "Hijos con mortales.",
+                    C: "Leyes Moisés.",
+                    D: "Profeta."
+                },
+                correct: "A"
+            },
+            {
+                category: "Solemne - Polibio",
+                question: "Según Polibio, ¿por qué la aristocracia cae?",
+                options: {
+                    A: "Pueblo corrupto.",
+                    B: "Poder corrompe.",
+                    C: "Los sucesores (hijos) caen en la avaricia y vicios por falta de experiencia en el sufrimiento/trabajo.",
+                    D: "Falta poder."
+                },
+                correct: "C"
+            },
+            {
+                category: "Solemne - Cicerón",
+                question: "Según Cicerón ('Sobre la República'), el pueblo es:",
+                options: {
+                    A: "Conjunto al azar.",
+                    B: "Asociación fundada en el consenso sobre el derecho y la utilidad común.",
+                    C: "Grupo normas.",
+                    D: "II y III. (La definición completa incluye consenso iuris y communio utilitatis)."
+                },
+                correct: "D"
+            },
+            {
+                category: "Solemne - Ambrosio",
+                question: "Según Ambrosio de Milán (Carta a Teodosio), ¿principio fundamental?",
+                options: {
+                    A: "Emperador sometido a la ley de Dios y autoridad de la Iglesia (penitencia).",
+                    B: "Poder absoluto.",
+                    C: "Ley civil superior.",
+                    D: "Secreto."
+                },
+                correct: "A"
+            },
+            {
+                category: "Solemne - Eusebio",
+                question: "Según Eusebio, ¿rasgo de Constantino?",
+                options: {
+                    A: "Militar.",
+                    B: "Crueldad.",
+                    C: "Infraestructura.",
+                    D: "Profunda religiosidad y humildad (someterse a la Iglesia)."
+                },
+                correct: "D"
+            },
+            {
+                category: "Solemne - Lactancio",
+                question: "Según Lactancio, distinción bienes terrenales vs salvación:",
+                options: {
+                    A: "Prosperidad es prueba.",
+                    B: "Victorias.",
+                    C: "Riquezas se dan a buenos y malos; la felicidad eterna solo a los piadosos.",
+                    D: "Humildad."
+                },
+                correct: "C"
+            },
+            {
+                category: "Solemne - Dictatus Papae",
+                question: "Según Dictatus Papae, conducta frente a excomulgados:",
+                options: {
+                    A: "Rezar.",
+                    B: "Ignorar.",
+                    C: "Ayudar.",
+                    D: "No tener comunión ni compartir el hogar."
+                },
+                correct: "D"
+            },
+            {
+                category: "Solemne - Maquiavelo",
+                question: "Según Maquiavelo, ¿cuánta parte es Fortuna?",
+                options: {
+                    A: "La mitad (o poco menos).",
+                    B: "Nada.",
+                    C: "Cuarto.",
+                    D: "Todo."
+                },
+                correct: "A"
+            },
+            {
+                category: "Solemne - Ockham",
+                question: "Según Guillermo de Ockham, ¿autoridad del Papa?",
+                options: {
+                    A: "Limitada (no puede anular derechos temporales/imperiales).",
+                    B: "Suprema.",
+                    C: "Ilimitada.",
+                    D: "Absoluta."
+                },
+                correct: "A"
+            },
+            {
+                category: "Solemne - Müntzer",
+                question: "Según Müntzer (Manifiesto Praga), líderes religiosos:",
+                options: {
+                    A: "Enseñan letra sin espíritu.",
+                    B: "Incapaces orden.",
+                    C: "Fomentan sectas.",
+                    D: "Rechazan Papa."
+                },
+                correct: "A"
+            },
+            {
+                category: "Solemne - Hobbes",
+                question: "Según Hobbes (Leviatán), ¿qué es el Leviatán?",
+                options: {
+                    A: "Monstruo bíblico.",
+                    B: "El Estado como 'hombre artificial'.",
+                    C: "Arte.",
+                    D: "Ley."
+                },
+                correct: "B"
+            },
+            {
+                category: "Solemne - Rousseau",
+                question: "Según Rousseau ('Contrato Social'), única sociedad natural:",
+                options: {
+                    A: "Política.",
+                    B: "Monárquica.",
+                    C: "La familia.",
+                    D: "Ciudad."
+                },
+                correct: "C"
+            },
+            {
+                category: "Solemne - Locke",
+                question: "Según Locke, en el ejemplo de las bellotas, ¿cuándo son propiedad?",
+                options: {
+                    A: "Al digerir.",
+                    B: "Al recogerlas (trabajo).",
+                    C: "Al cocinar.",
+                    D: "Con consentimiento."
+                },
+                correct: "B"
+            },
+            {
+                category: "Solemne - Lutero",
+                question: "Según Lutero ('Autoridad Secular'), gobernar con el Evangelio es como:",
+                options: {
+                    A: "Pastor que encierra lobos con ovejas (imposible gobernar el mundo solo con el Evangelio por la maldad humana).",
+                    B: "Lucha paganos.",
+                    C: "Reservado sacerdotes.",
+                    D: "Labor asignada."
+                },
+                correct: "A"
+            },
+            {
+                category: "Solemne - Platón",
+                question: "Según Platón, orden de degeneración:",
+                options: {
+                    A: "Aristocracia -> Timocracia -> Oligarquía -> Democracia -> Tiranía.",
+                    B: "Aristocracia -> Democracia...",
+                    C: "Oligarquía -> Democracia...",
+                    D: "Aristocracia -> Oligarquía..."
+                },
+                correct: "A"
+            },
+            {
+                category: "Solemne - Heródoto",
+                question: "Según Heródoto (Solón y Creso), hombre rico vs afortunado:",
+                options: {
+                    A: "Rico satisface deseos, afortunado termina bien su vida.",
+                    B: "Afortunado más feliz.",
+                    C: "Afortunado al día.",
+                    D: "Rico sabiduría."
+                },
+                correct: "A"
+            },
+            {
+                category: "Solemne - Biblia",
+                question: "Según I Samuel, ¿por qué Dios desechó a Saúl?",
+                options: {
+                    A: "Hijos injustos.",
+                    B: "Pidió rey.",
+                    C: "Ofreció holocausto sin esperar y desobedeció orden sobre Amalec (obediencia mejor que sacrificio).",
+                    D: "Perdió batalla."
+                },
+                correct: "C"
+            },
+            {
+                category: "Solemne - Holland",
+                question: "Según Holland, paradoja crucifixión:",
+                options: {
+                    A: "Símbolo devoción.",
+                    B: "Divinizado por régimen.",
+                    C: "Ocultaron.",
+                    D: "Castigo reinterpretado como victoria (redefiniendo honor y debilidad)."
+                },
+                correct: "D"
+            },
+            {
+                category: "Solemne - Gelasio",
+                question: "Según Gelasio, rol del emperador:",
+                options: {
+                    A: "Obedecer Papa todo.",
+                    B: "Administrar asuntos públicos/materiales (mientras sacerdotes administran divinos).",
+                    C: "Sin función.",
+                    D: "Con Senado."
+                },
+                correct: "B"
+            },
+            {
+                category: "Solemne - Hobbes",
+                question: "Según Hobbes, la guerra es:",
+                options: {
+                    A: "Lucha actual.",
+                    B: "Disposición manifiesta (tiempo sin seguridad), como el mal tiempo.",
+                    C: "Desorden.",
+                    D: "Desigualdad."
+                },
+                correct: "B"
+            },
+            {
+                category: "Solemne - Proudhon",
+                question: "Según Proudhon ('¿Qué es la propiedad?'):",
+                options: {
+                    A: "La propiedad es un robo (no refleja justicia).",
+                    B: "Equivalentes.",
+                    C: "Superior.",
+                    D: "Depende cantidad."
+                },
+                correct: "A"
+            }
+        ];
+
+        // --- LÓGICA DEL JUEGO ---
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let shuffledQuestions = [];
+
+        // Inicializar
+        function startGame() {
+            // Aleatorizar preguntas
+            shuffledQuestions = [...questionsDB].sort(() => Math.random() - 0.5);
+            currentQuestionIndex = 0;
+            score = 0;
+
+            document.getElementById('score').innerText = score;
+            document.getElementById('total-q-num').innerText = shuffledQuestions.length;
+
+            document.getElementById('start-screen').classList.add('hidden');
+            document.getElementById('end-screen').classList.add('hidden');
+            document.getElementById('quiz-screen').classList.remove('hidden');
+
+            showQuestion();
+        }
+
+        // Mostrar pregunta actual
+        function showQuestion() {
+            resetState();
+            const questionData = shuffledQuestions[currentQuestionIndex];
+
+            // Actualizar textos
+            document.getElementById('current-q-num').innerText = currentQuestionIndex + 1;
+            document.getElementById('category-tag').innerText = questionData.category;
+            document.getElementById('question-text').innerText = questionData.question;
+
+            // Generar botones
+            const optionsContainer = document.getElementById('options-container');
+            for (const [key, value] of Object.entries(questionData.options)) {
+                const button = document.createElement('button');
+                button.innerText = `${key}) ${value}`;
+                button.classList.add(
+                    'option-btn', 'w-full', 'text-left', 'bg-white', 
+                    'border', 'border-gray-200', 'hover:border-blue-500', 
+                    'text-gray-700', 'font-medium', 'py-4', 'px-6', 
+                    'rounded-lg', 'text-sm', 'md:text-base'
+                );
+                button.onclick = () => selectOption(key, questionData.correct, button);
+                optionsContainer.appendChild(button);
+            }
+        }
+
+        // Limpiar estado anterior
+        function resetState() {
+            document.getElementById('feedback-area').classList.add('hidden');
+            document.getElementById('options-container').innerHTML = '';
+            document.getElementById('question-text').classList.remove('fade-in');
+            void document.getElementById('question-text').offsetWidth; // Trigger reflow
+            document.getElementById('question-text').classList.add('fade-in');
+        }
+
+        // Seleccionar opción
+        function selectOption(selectedKey, correctKey, btnElement) {
+            const buttons = document.querySelectorAll('.option-btn');
+            
+            // Deshabilitar todos los botones
+            buttons.forEach(btn => btn.disabled = true);
+
+            const feedbackMsg = document.getElementById('feedback-message');
+            const feedbackArea = document.getElementById('feedback-area');
+
+            if (selectedKey === correctKey) {
+                // Correcto
+                score++;
+                document.getElementById('score').innerText = score;
+                btnElement.classList.add('correct');
+                feedbackMsg.innerText = "¡Correcto! 🎉";
+                feedbackMsg.className = "text-center font-bold text-lg mb-4 text-green-600";
+            } else {
+                // Incorrecto
+                btnElement.classList.add('incorrect');
+                feedbackMsg.innerText = `Incorrecto. La respuesta era: ${correctKey}`;
+                feedbackMsg.className = "text-center font-bold text-lg mb-4 text-red-600";
+
+                // Resaltar la correcta
+                buttons.forEach(btn => {
+                    if (btn.innerText.startsWith(correctKey + ")")) {
+                        btn.classList.add('correct');
+                    }
+                });
+            }
+
+            feedbackArea.classList.remove('hidden');
+        }
+
+        // Siguiente pregunta
+        function nextQuestion() {
+            currentQuestionIndex++;
+            if (currentQuestionIndex < shuffledQuestions.length) {
+                showQuestion();
+            } else {
+                showEndScreen();
+            }
+        }
+
+        // Pantalla final
+        function showEndScreen() {
+            document.getElementById('quiz-screen').classList.add('hidden');
+            document.getElementById('end-screen').classList.remove('hidden');
+            document.getElementById('final-score').innerText = score;
+        }
+
+    </script>
+</body>
+</html>
