@@ -3,474 +3,432 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Profe de Cálculo - Práctica Mental</title>
-    <!-- Tailwind CSS para los estilos responsivos -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- MathJax para renderizar las fórmulas matemáticas de forma hermosa -->
+    <title>Entrenamiento de Cálculo Mental</title>
+    <style>
+        * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: #f0f4f8; color: #333; margin: 0; padding: 0; display: flex; justify-content: center; min-height: 100vh; }
+        .container { width: 100%; max-width: 800px; padding: 20px; }
+        
+        /* Tarjetas y Paneles */
+        .card { background: white; border-radius: 12px; padding: 30px; box-shadow: 0 8px 16px rgba(0,0,0,0.05); text-align: center; }
+        .hidden { display: none !important; }
+        
+        /* Tipografía y Textos */
+        h1 { color: #2c3e50; font-size: 28px; margin-bottom: 10px; }
+        h2 { color: #34495e; font-size: 22px; }
+        .subtitle { color: #7f8c8d; font-size: 16px; margin-bottom: 20px; line-height: 1.5; }
+        
+        /* Botones */
+        .btn-primary { background-color: #3498db; color: white; border: none; padding: 15px 30px; font-size: 18px; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.2s; }
+        .btn-primary:hover { background-color: #2980b9; }
+        
+        .options-grid { display: grid; grid-template-columns: 1fr; gap: 15px; margin-top: 20px; }
+        @media (min-width: 600px) { .options-grid { grid-template-columns: 1fr 1fr; } }
+        
+        .option-btn { background-color: #f8f9fa; border: 2px solid #e9ecef; color: #2c3e50; padding: 20px; font-size: 18px; border-radius: 8px; cursor: pointer; transition: 0.2s; }
+        .option-btn:hover:not(:disabled) { border-color: #3498db; background-color: #ebf5fb; }
+        .option-btn:disabled { cursor: not-allowed; opacity: 0.7; }
+        
+        /* Estados de respuesta */
+        .correct { background-color: #2ecc71 !important; color: white !important; border-color: #27ae60 !important; }
+        .incorrect { background-color: #e74c3c !important; color: white !important; border-color: #c0392b !important; }
+        
+        /* UI del Quiz */
+        .stats { display: flex; justify-content: space-between; margin-bottom: 20px; font-weight: bold; color: #7f8c8d; font-size: 16px; }
+        .score { color: #2ecc71; }
+        .badge { display: inline-block; padding: 5px 15px; border-radius: 20px; font-weight: bold; font-size: 14px; margin-bottom: 15px; }
+        .badge.derivada { background-color: #f39c12; color: white; }
+        .badge.integral { background-color: #9b59b6; color: white; }
+        .math-display { font-size: 32px; margin: 20px 0; min-height: 50px; color: #000; }
+        
+        /* Feedback */
+        .feedback-box { margin-top: 25px; padding: 20px; border-radius: 8px; text-align: left; border-left: 5px solid; }
+        .feedback-box.error { background-color: #fadbd8; border-color: #e74c3c; color: #7b241c; }
+        .feedback-box.success { background-color: #d5f5e3; border-color: #2ecc71; color: #1d8348; }
+        .btn-next { margin-top: 15px; background-color: #2c3e50; color: white; border: none; padding: 12px 25px; font-size: 16px; border-radius: 6px; cursor: pointer; float: right;}
+        .btn-next:hover { background-color: #1a252f; }
+        .clearfix::after { content: ""; clear: both; display: table; }
+    </style>
+
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script>
         window.MathJax = {
-            tex: {
-                inlineMath: [['$', '$'], ['\\(', '\\)']],
-                displayMath: [['$$', '$$'], ['\\[', '\\]']]
-            }
+            tex: { inlineMath: [['$', '$'], ['\\(', '\\)']], displayMath: [['$$', '$$']] },
+            startup: { typeset: false } /* Evita que renderice antes de que JS construya la app */
         };
     </script>
-    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
-    <style>
-        /* Estilos personalizados para animaciones suaves */
-        .option-btn {
-            transition: all 0.2s ease-in-out;
-        }
-        .option-btn:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        }
-        .option-btn:active:not(:disabled) {
-            transform: translateY(0);
-        }
-        .correct-anim {
-            background-color: #22c55e !important; /* verde */
-            color: white !important;
-            border-color: #16a34a !important;
-        }
-        .incorrect-anim {
-            background-color: #ef4444 !important; /* rojo */
-            color: white !important;
-            border-color: #dc2626 !important;
-        }
-        .math-large {
-            font-size: 1.5rem;
-        }
-        @media (min-width: 768px) {
-            .math-large {
-                font-size: 2rem;
-            }
-        }
-    </style>
 </head>
-<body class="bg-gray-50 text-gray-800 font-sans min-h-screen flex flex-col items-center">
+<body>
 
-    <!-- Pantalla de Inicio -->
-    <div id="start-screen" class="flex flex-col items-center justify-center min-h-screen w-full max-w-2xl px-4 text-center">
-        <div class="bg-white p-8 rounded-2xl shadow-xl w-full">
-            <h1 class="text-3xl md:text-4xl font-bold text-blue-600 mb-4">🧠 Práctica Mental de Cálculo</h1>
-            <p class="text-lg text-gray-600 mb-6">
-                ¡Hola! Soy tu profe virtual. He preparado <strong>100 ejercicios</strong> (50 derivadas y 50 integrales) sin trigonometría, ideales para mecanizar y agilizar tu mente.
-            </p>
-            <ul class="text-left text-gray-600 mb-8 space-y-2 max-w-md mx-auto bg-blue-50 p-4 rounded-lg">
-                <li>✅ Regla de la potencia y constantes.</li>
-                <li>✅ Exponenciales ($e^x$) y logaritmos.</li>
-                <li>✅ Regla del producto, cociente y cadena simple.</li>
-                <li>✅ Opciones múltiples y explicaciones al fallar.</li>
-            </ul>
-            <button onclick="iniciarPractica()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-full shadow-lg text-xl transition transform hover:scale-105">
-                ¡Empezar a Entrenar!
-            </button>
-        </div>
-    </div>
-
-    <!-- Pantalla Principal de la App -->
-    <div id="app-screen" class="hidden w-full max-w-3xl px-4 py-8 flex-col items-center min-h-screen">
-        
-        <!-- Header / Stats -->
-        <div class="w-full flex justify-between items-center mb-6 bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-            <div>
-                <p class="text-sm text-gray-500 font-semibold uppercase tracking-wider">Progreso</p>
-                <p id="progress-text" class="text-xl font-bold text-blue-600">1 / 100</p>
-            </div>
-            <div class="text-right">
-                <p class="text-sm text-gray-500 font-semibold uppercase tracking-wider">Aciertos</p>
-                <p id="score-text" class="text-xl font-bold text-green-600">0</p>
-            </div>
+    <div class="container">
+        <div id="pantalla-inicio" class="card">
+            <h1>🧠 Práctica de Cálculo Mental</h1>
+            <p class="subtitle">Soy tu profesor particular. He preparado 100 ejercicios exactos (50 derivadas y 50 integrales) sin trigonometría. El objetivo es que respondas usando solo tu cabeza, para ganar velocidad e intuición.</p>
+            <button id="btn-empezar" class="btn-primary">Empezar Sesión</button>
         </div>
 
-        <!-- Tarjeta de Pregunta -->
-        <div class="bg-white w-full rounded-2xl shadow-md p-6 md:p-10 mb-6 border-t-4 border-blue-500">
-            <div class="flex items-center justify-center mb-4">
-                <span id="question-type-badge" class="px-4 py-1 rounded-full text-sm font-bold uppercase tracking-wide">
-                    Tipo
-                </span>
+        <div id="pantalla-quiz" class="card hidden">
+            <div class="stats">
+                <span id="progreso-texto">Pregunta: 1/100</span>
+                <span class="score">Aciertos: <span id="puntaje-texto">0</span></span>
             </div>
-            <h2 class="text-center text-gray-700 text-lg md:text-xl font-medium mb-4" id="instruction-text">
-                Encuentra la solución mentalmente:
-            </h2>
-            <div id="math-question" class="text-center math-large font-bold mb-8 text-black min-h-[4rem] flex items-center justify-center">
-                <!-- Fomula va aquí -->
-            </div>
+            
+            <span id="tipo-badge" class="badge">Tipo</span>
+            <div id="pregunta-matematica" class="math-display"></div>
 
-            <!-- Opciones -->
-            <div id="options-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <!-- Botones generados en JS -->
-            </div>
-        </div>
-
-        <!-- Área de Retroalimentación del Profe -->
-        <div id="feedback-area" class="hidden w-full bg-white rounded-2xl shadow-lg p-6 border-l-4">
-            <div class="flex items-start">
-                <div id="feedback-icon" class="text-3xl mr-4 mt-1">👨‍🏫</div>
-                <div>
-                    <h3 id="feedback-title" class="font-bold text-lg mb-1">Título Feedback</h3>
-                    <p id="feedback-message" class="text-gray-700 mb-4">Mensaje de explicación.</p>
-                    <button id="next-btn" onclick="siguientePregunta()" class="bg-gray-800 hover:bg-gray-900 text-white font-semibold py-2 px-6 rounded-lg shadow transition">
-                        Siguiente Ejercicio ➔
-                    </button>
+            <div id="contenedor-opciones" class="options-grid">
                 </div>
+
+            <div id="caja-feedback" class="feedback-box hidden clearfix">
+                <h3 id="titulo-feedback" style="margin-top: 0;"></h3>
+                <p id="texto-feedback"></p>
+                <button id="btn-siguiente" class="btn-next">Siguiente ➔</button>
             </div>
         </div>
 
-    </div>
-
-    <!-- Pantalla Final -->
-    <div id="end-screen" class="hidden flex-col items-center justify-center min-h-screen w-full max-w-2xl px-4 text-center">
-        <div class="bg-white p-8 rounded-2xl shadow-xl w-full border-t-8 border-green-500">
-            <h1 class="text-4xl font-bold text-gray-800 mb-4">¡Entrenamiento Completado! 🎉</h1>
-            <p class="text-xl text-gray-600 mb-2">Resolviste los 100 ejercicios.</p>
-            <p class="text-2xl font-bold text-blue-600 mb-8">Puntaje Final: <span id="final-score"></span> / 100</p>
-            <p id="final-message" class="text-lg text-gray-700 mb-8 italic">
-                <!-- Mensaje motivacional generado en JS -->
-            </p>
-            <button onclick="location.reload()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-full shadow-lg text-xl transition transform hover:scale-105">
-                Volver a Entrenar 🔄
-            </button>
+        <div id="pantalla-final" class="card hidden">
+            <h1>¡Sesión Finalizada! 🎉</h1>
+            <p class="subtitle">Has completado tu entrenamiento de cálculo mental.</p>
+            <h2 id="resultado-final"></h2>
+            <p id="mensaje-final" class="subtitle" style="font-weight: bold;"></p>
+            <button id="btn-reiniciar" class="btn-primary">Volver a Entrenar</button>
         </div>
     </div>
 
     <script>
-        // --- BASE DE DATOS DE PREGUNTAS ---
-        const preguntas = [];
+        /* BASE DE DATOS DE PREGUNTAS */
+        var bancoPreguntas = [];
 
-        // Funciones auxiliares para construir la base de datos rápidamente
-        function addDeriv(q, a, d1, d2, d3, exp) {
-            preguntas.push({ tipo: 'Derivada', pre: q, res: a, dist: [d1, d2, d3], explicacion: exp });
+        /* Funciones para llenar la base de datos fácilmente */
+        function D(preg, res, d1, d2, d3, exp) {
+            bancoPreguntas.push({ tipo: "Derivada", pregunta: preg, correcta: res, distractores: [d1, d2, d3], explicacion: exp });
         }
-        function addInt(q, a, d1, d2, d3, exp) {
-            preguntas.push({ tipo: 'Integral', pre: q, res: a, dist: [d1, d2, d3], explicacion: exp });
+        function I(preg, res, d1, d2, d3, exp) {
+            bancoPreguntas.push({ tipo: "Integral", pregunta: preg, correcta: res, distractores: [d1, d2, d3], explicacion: exp });
         }
 
-        /* ==========================================
-           50 DERIVADAS
-           ========================================== */
-        // Constantes y Lineales (5)
-        addDeriv("5", "0", "5", "1", "x", "La derivada de una constante (un número sin variables) es siempre 0, porque no hay tasa de cambio.");
-        addDeriv("-12", "0", "-12", "-1", "x", "No importa si el número es negativo o muy grande, la derivada de cualquier constante es 0.");
-        addDeriv("x", "1", "x", "0", "\\frac{x^2}{2}", "La derivada de $x$ es 1. Visualmente, la función $y=x$ es una recta con pendiente 1.");
-        addDeriv("3x", "3", "3x", "0", "x", "Regla de ponderación: La derivada de $cx$ es simplemente $c$.");
-        addDeriv("-4x", "-4", "-4x", "4", "0", "Al derivar $-4x$, la $x$ se convierte en 1 y queda solo la constante que la multiplicaba: $-4$.");
-
-        // Regla de la potencia simple (15)
-        addDeriv("x^2", "2x", "x", "\\frac{x^3}{3}", "2", "Regla de la potencia: multiplicas por el exponente y le restas 1 al exponente ($2x^{2-1} = 2x$).");
-        addDeriv("x^3", "3x^2", "3x", "x^2", "\\frac{x^4}{4}", "Baja el 3 multiplicando y resta 1 al exponente: $3x^2$.");
-        addDeriv("x^4", "4x^3", "4x^2", "x^3", "3x^3", "Baja el 4 a multiplicar y el exponente 4 se convierte en 3.");
-        addDeriv("x^5", "5x^4", "5x", "x^4", "4x^4", "Regla de la potencia directa: $nx^{n-1} \\rightarrow 5x^{5-1} = 5x^4$.");
-        addDeriv("2x^2", "4x", "2x", "4x^2", "2", "Multiplica el coeficiente por el exponente ($2 \\cdot 2 = 4$) y resta 1 al exponente.");
-        addDeriv("3x^3", "9x^2", "6x^2", "3x^2", "9x", "El 3 del exponente baja a multiplicar al 3 que ya estaba ($3 \\cdot 3 = 9$), quedando $9x^2$.");
-        addDeriv("5x^2", "10x", "7x", "5x", "10", "Multiplicamos $5 \\cdot 2 = 10$, y el exponente $2-1=1$, por lo tanto $10x$.");
-        addDeriv("-2x^3", "-6x^2", "-5x^2", "6x^2", "-2x^2", "Cuidado con los signos. $-2 \\cdot 3 = -6$, y restamos 1 al exponente: $-6x^2$.");
-        addDeriv("4x^4", "16x^3", "8x^3", "16x^4", "4x^3", "$4 \\cdot 4 = 16$. El exponente baja en uno, queda en 3.");
-        addDeriv("10x^2", "20x", "10x", "20", "12x", "Multiplica el coeficiente 10 por el exponente 2, queda $20x$.");
-        addDeriv("x^6", "6x^5", "5x^6", "6x^6", "x^5", "Regla de la potencia: el 6 baja como coeficiente y el nuevo exponente es 5.");
-        addDeriv("-x^2", "-2x", "2x", "-x", "x^2", "El signo negativo actúa como un -1 multiplicando. Por ende, la derivada es $-2x$.");
-        addDeriv("\\frac{x^2}{2}", "x", "2x", "\\frac{x}{2}", "1", "Al bajar el 2 del exponente, se cancela con el 2 dividiendo: $\\frac{2x}{2} = x$.");
-        addDeriv("\\frac{x^3}{3}", "x^2", "3x^2", "x", "\\frac{x^2}{3}", "Al bajar el 3, se cancela con el denominador, dejando solo $x^2$.");
-        addDeriv("x^7", "7x^6", "6x^7", "7x", "\\frac{x^8}{8}", "Simplemente $7x^{7-1} = 7x^6$. La opción dividida entre 8 es la integral, ¡no te confundas!");
-
-        // Potencias Negativas y Fraccionarias (10)
-        addDeriv("\\frac{1}{x}", "-\\frac{1}{x^2}", "\\frac{1}{x^2}", "\\ln(x)", "-1", "Recuerda que $\\frac{1}{x} = x^{-1}$. Al derivar, baja el -1 y el exponente queda $-1-1 = -2$. Es decir, $-x^{-2}$ o $-\\frac{1}{x^2}$.");
-        addDeriv("\\frac{1}{x^2}", "-\\frac{2}{x^3}", "\\frac{2}{x^3}", "-\\frac{1}{x^3}", "-\\frac{2}{x}", "Escribimos como $x^{-2}$. Su derivada es $-2x^{-3}$, que equivale a $-\\frac{2}{x^3}$.");
-        addDeriv("\\frac{2}{x}", "-\\frac{2}{x^2}", "\\frac{2}{x^2}", "-2", "2\\ln(x)", "Es $2x^{-1}$. Derivada: $2 \\cdot (-1)x^{-2} = -2x^{-2} = -\\frac{2}{x^2}$. La opción del ln(x) es la integral.");
-        addDeriv("\\frac{3}{x^2}", "-\\frac{6}{x^3}", "-\\frac{3}{x^3}", "\\frac{6}{x^3}", "-\\frac{6}{x}", "Es $3x^{-2}$. La derivada es $3 \\cdot (-2)x^{-3} = -\\frac{6}{x^3}$.");
-        addDeriv("-\\frac{1}{x}", "\\frac{1}{x^2}", "-\\frac{1}{x^2}", "\\ln(x)", "1", "Es $-x^{-1}$. Derivada: $-(-1)x^{-2} = 1x^{-2} = \\frac{1}{x^2}$.");
-        addDeriv("\\sqrt{x}", "\\frac{1}{2\\sqrt{x}}", "\\frac{1}{\\sqrt{x}}", "\\frac{2}{3}x^{3/2}", "x^{-1/2}", "Escribe la raíz como $x^{1/2}$. Derivada: $\\frac{1}{2}x^{-1/2}$, que es igual a $\\frac{1}{2\\sqrt{x}}$.");
-        addDeriv("2\\sqrt{x}", "\\frac{1}{\\sqrt{x}}", "\\frac{2}{\\sqrt{x}}", "\\frac{1}{2\\sqrt{x}}", "x", "Es $2x^{1/2}$. Derivada: $2 \\cdot \\frac{1}{2}x^{-1/2} = x^{-1/2} = \\frac{1}{\\sqrt{x}}$.");
-        addDeriv("x^{3/2}", "\\frac{3}{2}\\sqrt{x}", "\\frac{3}{2}x", "\\frac{1}{2}x^{1/2}", "\\frac{2}{5}x^{5/2}", "Baja el exponente $\\frac{3}{2}$ y resta 1: $\\frac{3}{2}-1 = \\frac{1}{2}$. Queda $\\frac{3}{2}x^{1/2}$.");
-        addDeriv("4x^{-1}", "-4x^{-2}", "4x^{-2}", "-4", "4\\ln(x)", "Baja el -1 a multiplicar al 4, y resta 1 al exponente: $-4x^{-2}$.");
-        addDeriv("-2x^{-2}", "4x^{-3}", "-4x^{-3}", "4x^{-1}", "-2x^{-3}", "$-2 \\cdot (-2) = 4$. El exponente $-2-1 = -3$. Queda $4x^{-3}$.");
-
-        // Exponenciales (Euler) y Logaritmos (12)
-        addDeriv("e^x", "e^x", "xe^{x-1}", "e", "x", "¡La más fácil! La derivada de $e^x$ es siempre ella misma: $e^x$.");
-        addDeriv("3e^x", "3e^x", "3xe^{x-1}", "3", "e^x", "Las constantes multiplicativas se mantienen. La derivada es $3e^x$.");
-        addDeriv("e^{2x}", "2e^{2x}", "e^{2x}", "2xe^{2x-1}", "\\frac{1}{2}e^{2x}", "Regla de la cadena: derivamos el exponente (da 2) y lo multiplicamos por la misma exponencial.");
-        addDeriv("e^{3x}", "3e^{3x}", "e^{3x}", "3xe^{3x-1}", "3e^x", "Regla de la cadena: la derivada de $3x$ es 3, que pasa a multiplicar a $e^{3x}$.");
-        addDeriv("e^{-x}", "-e^{-x}", "e^{-x}", "-xe^{-x}", "-e^x", "La derivada del exponente $-x$ es $-1$. Pasa a multiplicar, quedando $-e^{-x}$.");
-        addDeriv("5e^{4x}", "20e^{4x}", "5e^{4x}", "20xe^{4x}", "9e^{4x}", "Multiplica la constante 5 por la derivada del exponente (4). $5 \\cdot 4 = 20$.");
-        addDeriv("\\ln(x)", "\\frac{1}{x}", "\\frac{1}{x^2}", "e^x", "1", "Regla fundamental: la derivada del logaritmo natural $\\ln(x)$ es $\\frac{1}{x}$.");
-        addDeriv("2\\ln(x)", "\\frac{2}{x}", "\\frac{1}{2x}", "\\frac{2}{x^2}", "2", "Mantenemos la constante 2 y derivamos el ln(x): $2 \\cdot \\frac{1}{x} = \\frac{2}{x}$.");
-        addDeriv("\\ln(3x)", "\\frac{1}{x}", "\\frac{3}{x}", "\\frac{1}{3x}", "3", "Regla de la cadena: $\\frac{1}{3x} \\cdot 3 = \\frac{1}{x}$. ¡Nota que es la misma que la de $\\ln(x)$!");
-        addDeriv("\\ln(x^2)", "\\frac{2}{x}", "\\frac{1}{x^2}", "\\frac{2x}{x^2}", "2x", "Regla de la cadena: $\\frac{1}{x^2} \\cdot 2x = \\frac{2x}{x^2} = \\frac{2}{x}$. O usa logaritmos: $\\ln(x^2) = 2\\ln(x)$.");
-        addDeriv("e^{x/2}", "\\frac{1}{2}e^{x/2}", "e^{x/2}", "2e^{x/2}", "\\frac{1}{2}e^x", "La derivada del exponente $\\frac{x}{2}$ es $\\frac{1}{2}$, que pasa multiplicando al frente.");
-        addDeriv("-e^{-2x}", "2e^{-2x}", "-2e^{-2x}", "-e^{-2x}", "2e^{2x}", "Derivada del exponente es -2. Multiplicado por el signo negativo original, da positivo: $2e^{-2x}$.");
-
-        // Producto, Cociente, Cadena básica (8)
-        addDeriv("xe^x", "e^x(x+1)", "xe^x", "e^x", "e^x(x-1)", "Regla del producto $(uv)' = u'v + uv'$. Aquí $u=x, v=e^x$. Da $1\\cdot e^x + x\\cdot e^x = e^x(1+x)$.");
-        addDeriv("x^2e^x", "xe^x(x+2)", "2xe^x", "x^2e^x", "2e^x", "Regla del producto: $2x\\cdot e^x + x^2\\cdot e^x$. Factorizando $xe^x$, queda $xe^x(2+x)$.");
-        addDeriv("x\\ln(x)", "\\ln(x)+1", "\\frac{1}{x}", "1", "\\ln(x)", "Regla del producto: $1\\cdot \\ln(x) + x\\cdot \\frac{1}{x} = \\ln(x) + 1$.");
-        addDeriv("\\frac{e^x}{x}", "\\frac{e^x(x-1)}{x^2}", "\\frac{e^x}{x^2}", "e^x\\ln(x)", "\\frac{e^x(x+1)}{x^2}", "Regla del cociente: $\\frac{u'v - uv'}{v^2} = \\frac{e^x\\cdot x - e^x\\cdot 1}{x^2} = \\frac{e^x(x-1)}{x^2}$.");
-        addDeriv("\\frac{1}{x+1}", "-\\frac{1}{(x+1)^2}", "\\frac{1}{(x+1)^2}", "-1", "\\ln(x+1)", "Regla del cociente o cadena (piensa en $(x+1)^{-1}$). Baja el -1 y el exponente queda en -2.");
-        addDeriv="(2x+1)^2", "4(2x+1)", "2(2x+1)", "4x+1", "2", "Regla de la cadena: baja el 2, por $(2x+1)^1$, multiplicado por la derivada interna que es 2. Total: $4(2x+1)$.");
-        addDeriv="(x^2+1)^3", "6x(x^2+1)^2", "3(x^2+1)^2", "3x(x^2+1)^2", "6(x^2+1)^2", "Cadena: $3(x^2+1)^2 \\cdot 2x = 6x(x^2+1)^2$.");
-        addDeriv("e^{x^2}", "2xe^{x^2}", "e^{2x}", "x^2e^{x^2}", "2e^{x^2}", "Cadena: la exponencial queda igual, pero se multiplica por la derivada del exponente ($x^2$), que es $2x$.");
-
-        /* ==========================================
-           50 INTEGRALES (Primitivas)
-           ========================================== */
-        // Constantes (5)
-        addInt("0", "C", "0", "x + C", "1 + C", "La integral de 0 es una constante cualquiera (C), ya que la derivada de cualquier constante es 0.");
-        addInt("1", "x + C", "0", "x^2 + C", "1 + C", "La función que al derivarse da 1 es $x$. ¡No olvides la constante de integración!");
-        addInt("5", "5x + C", "0", "5 + C", "x + C", "Al integrar una constante $k$, simplemente le agregas la variable $x$: $kx + C$.");
-        addInt("-3", "-3x + C", "-3 + C", "0", "-3x^2 + C", "La constante sale de la integral y se multiplica por $x$.");
-        addInt("\\pi", "\\pi x + C", "0", "\\pi + C", "x + C", "Aunque sea una letra griega, $\\pi$ es un número constante. Su integral es $\\pi x + C$.");
-
-        // Regla de la potencia simple (15)
-        addInt("x", "\\frac{x^2}{2} + C", "1 + C", "x^2 + C", "\\frac{x^3}{3} + C", "Regla de integración: suma 1 al exponente ($1+1=2$) y divide por el nuevo exponente: $\\frac{x^2}{2}$.");
-        addInt("2x", "x^2 + C", "2 + C", "2x^2 + C", "\\frac{2x^3}{3} + C", "Piensa al revés: ¿qué función derivas para obtener $2x$? Exactamente, $x^2$.");
-        addInt("x^2", "\\frac{x^3}{3} + C", "2x + C", "x^3 + C", "\\frac{x^2}{3} + C", "Suma 1 al exponente (queda en 3) y divide por 3. Te equivocaste si derivaste (2x).");
-        addInt("3x^2", "x^3 + C", "6x + C", "3x^3 + C", "\\frac{x^4}{4} + C", "¡Cálculo mental! ¿Qué derivas para obtener $3x^2$? Es $x^3$. (Se cancela el 3 al dividir).");
-        addInt("x^3", "\\frac{x^4}{4} + C", "3x^2 + C", "\\frac{x^3}{4} + C", "x^4 + C", "Sumamos 1 al exponente 3 dando 4, y dividimos entre ese mismo 4.");
-        addInt("4x^3", "x^4 + C", "12x^2 + C", "4x^4 + C", "\\frac{4x^4}{3} + C", "El 4 que multiplica se cancela con el 4 que divide al aplicar la regla de la potencia.");
-        addInt("x^4", "\\frac{x^5}{5} + C", "4x^3 + C", "x^5 + C", "\\frac{x^4}{5} + C", "El exponente sube de 4 a 5, y pasamos ese 5 a dividir.");
-        addInt("5x^4", "x^5 + C", "20x^3 + C", "5x^5 + C", "\\frac{x^5}{4} + C", "¿La derivada de qué función es $5x^4$? Es la derivada directa de $x^5$.");
-        addInt("6x^5", "x^6 + C", "30x^4 + C", "6x^6 + C", "\\frac{6x^6}{5} + C", "Piensa a la inversa: al derivar $x^6$, el 6 baja. Así que la integral es $x^6$.");
-        addInt("-2x", "-x^2 + C", "-2 + C", "x^2 + C", "-\\frac{x^2}{2} + C", "El exponente de $x$ pasa a 2, y al dividir el -2 entre 2 queda -1.");
-        addInt("\\frac{x^2}{2}", "\\frac{x^3}{6} + C", "x + C", "\\frac{x^3}{3} + C", "\\frac{x^3}{2} + C", "Suma 1 al exponente (queda 3). Al dividir por 3, se multiplica con el 2 del denominador ($2 \\cdot 3 = 6$).");
-        addInt("10x^9", "x^{10} + C", "90x^8 + C", "10x^{10} + C", "\\frac{x^{10}}{9} + C", "Derivar $x^{10}$ baja el 10, dejando exactamente $10x^9$.");
-        addInt("2x^3", "\\frac{x^4}{2} + C", "6x^2 + C", "\\frac{2x^4}{3} + C", "2x^4 + C", "Queda $\\frac{2x^4}{4}$, que simplificando la fracción es $\\frac{x^4}{2}$.");
-        addInt("-x^2", "-\\frac{x^3}{3} + C", "-2x + C", "\\frac{x^3}{3} + C", "-x^3 + C", "El signo menos se mantiene. Regla de la potencia normal.");
-        addInt("7x^6", "x^7 + C", "42x^5 + C", "7x^7 + C", "\\frac{7x^7}{6} + C", "La regla de la potencia perfecta. $x^7$ derivado es $7x^6$.");
-
-        // Potencias Negativas y 1/x (10)
-        addInt("\\frac{1}{x}", "\\ln|x| + C", "-\\frac{1}{x^2} + C", "\\frac{1}{x^2} + C", "\\ln(x^2) + C", "¡Caso especial fundamental! La integral de $x^{-1}$ no usa la regla de la potencia, es el logaritmo natural.");
-        addInt("\\frac{2}{x}", "2\\ln|x| + C", "-\\frac{2}{x^2} + C", "\\ln|2x| + C", "\\frac{2}{x^2} + C", "La constante 2 sale de la integral, y queda $2 \\int \\frac{1}{x} dx = 2\\ln|x|$.");
-        addInt("-\\frac{1}{x}", "-\\ln|x| + C", "\\frac{1}{x^2} + C", "\\ln|-x| + C", "-\\frac{1}{x^2} + C", "El signo negativo sale, dejando simplemente $-\\ln|x|$.");
-        addInt("\\frac{1}{2x}", "\\frac{1}{2}\\ln|x| + C", "-\\frac{1}{4x^2} + C", "\\ln|2x| + C", "2\\ln|x| + C", "Es igual a $\\frac{1}{2} \\int \\frac{1}{x} dx$, lo que da $\\frac{1}{2}\\ln|x|$.");
-        addInt("x^{-2}", "-x^{-1} + C", "-2x^{-3} + C", "\\frac{x^{-3}}{-3} + C", "x^{-1} + C", "Suma 1 al exponente: $-2+1 = -1$. Divide por el nuevo exponente (-1). Queda $-\\frac{1}{x}$.");
-        addInt("\\frac{1}{x^2}", "-\\frac{1}{x} + C", "-\\frac{2}{x^3} + C", "\\frac{1}{x} + C", "\\ln|x^2| + C", "Es lo mismo que la anterior. $x^{-2} \\rightarrow \\frac{x^{-1}}{-1} = -\\frac{1}{x}$. ¡No confundir con el logaritmo!");
-        addInt("\\frac{3}{x^2}", "-\\frac{3}{x} + C", "-\\frac{6}{x^3} + C", "3\\ln|x^2| + C", "\\frac{3}{x} + C", "Constante 3 por integral de $x^{-2}$. Da $3(-x^{-1}) = -\\frac{3}{x}$.");
-        addInt("x^{-3}", "-\\frac{1}{2x^2} + C", "-3x^{-4} + C", "\\frac{1}{2x^2} + C", "-x^{-2} + C", "Suma 1 al exponente: $-3+1=-2$. Divide por -2. Queda $\\frac{x^{-2}}{-2} = -\\frac{1}{2x^2}$.");
-        addInt("\\frac{1}{x^3}", "-\\frac{1}{2x^2} + C", "-\\frac{3}{x^4} + C", "\\frac{1}{2x^2} + C", "-\\frac{1}{x^2} + C", "Igual que $x^{-3}$. Da $\\frac{x^{-2}}{-2}$. Cuidado con derivar (la opción $-3/x^4$).");
-        addInt("-\\frac{2}{x^3}", "\\frac{1}{x^2} + C", "\\frac{6}{x^4} + C", "-\\frac{1}{x^2} + C", "\\frac{2}{x^2} + C", "Es $-2x^{-3}$. Al integrar sumas 1 al exponente dando -2, divides por -2. Se cancelan los -2.");
-
-        // Exponenciales (10)
-        addInt("e^x", "e^x + C", "xe^{x-1} + C", "e^x\\ln(e) + C", "x + C", "La integral de $e^x$ es simplemente $e^x$, igual que su derivada.");
-        addInt("2e^x", "2e^x + C", "2xe^{x-1} + C", "e^{2x} + C", "e^x + C", "La constante 2 sale de la integral sin afectar al $e^x$.");
-        addInt("e^{2x}", "\\frac{1}{2}e^{2x} + C", "2e^{2x} + C", "e^{2x} + C", "\\frac{1}{3}e^{3x} + C", "¡Cuidado! Al integrar multiplicamos por el INVERSO de la derivada del exponente. (Sustitución $u=2x$).");
-        addInt("e^{3x}", "\\frac{1}{3}e^{3x} + C", "3e^{3x} + C", "e^{3x} + C", "3xe^{3x} + C", "Por regla de sustitución rápida, el 3 del exponente pasa a dividir.");
-        addInt("e^{-x}", "-e^{-x} + C", "e^{-x} + C", "-xe^{-x} + C", "e^{-x^2} + C", "El derivado del exponente es -1. Dividir por -1 es lo mismo que poner un signo negativo enfrente.");
-        addInt("4e^{2x}", "2e^{2x} + C", "8e^{2x} + C", "4e^{2x} + C", "2xe^{2x} + C", "Dividimos la constante 4 entre la derivada del exponente (2). $4/2 = 2$.");
-        addInt("-e^x", "-e^x + C", "-xe^{x-1} + C", "e^x + C", "0 + C", "El signo negativo es una constante (-1) y se mantiene al integrar.");
-        addInt("e^{x/2}", "2e^{x/2} + C", "\\frac{1}{2}e^{x/2} + C", "e^{x/2} + C", "xe^{x/2} + C", "Dividir por $1/2$ (la derivada del exponente) es equivalente a multiplicar por 2.");
-        addInt("6e^{3x}", "2e^{3x} + C", "18e^{3x} + C", "6e^{3x} + C", "2xe^{3x} + C", "Dividimos el 6 entre el 3 del exponente. Da 2.");
-        addInt("e^{-2x}", "-\\frac{1}{2}e^{-2x} + C", "-2e^{-2x} + C", "\\frac{1}{2}e^{-2x} + C", "-e^{-2x} + C", "Sustitución rápida: el -2 del exponente pasa a dividir.");
-
-        // Sustitución Simple Mental (10)
-        addInt("2xe^{x^2}", "e^{x^2} + C", "2e^{x^2} + C", "x^2e^{x^2} + C", "e^{2x} + C", "Piensa a la inversa: si derivas $e^{x^2}$ por regla de la cadena obtienes exactamente $2xe^{x^2}$.");
-        addInt("xe^{x^2}", "\\frac{1}{2}e^{x^2} + C", "e^{x^2} + C", "2xe^{x^2} + C", "x^2e^{x^2} + C", "Es casi igual a la anterior, pero le falta el 2. Así que compensamos dividiendo por 2.");
-        addInt("\\frac{2x}{x^2+1}", "\\ln|x^2+1| + C", "\\frac{1}{x^2+1} + C", "2\\ln|x^2+1| + C", "x^2+1 + C", "La forma $\\int \\frac{u'}{u} = \\ln|u|$. El numerador es exactamente la derivada del denominador.");
-        addInt("\\frac{x}{x^2+1}", "\\frac{1}{2}\\ln|x^2+1| + C", "\\ln|x^2+1| + C", "\\frac{1}{x^2+1} + C", "2\\ln|x^2+1| + C", "Igual a la anterior pero le falta el 2 arriba, por lo que multiplicamos por $1/2$ afuera.");
-        addInt("2(2x+1)", "(2x+1)^2 + C", "(2x+1)^3 + C", "4 + C", "2x^2+2x + C", "Desarrolla o usa sustitución. Lo más fácil mentalmente: la derivada de $(2x+1)^2$ es $2(2x+1) \\cdot 2 = 4(2x+1)$. Ups, la respuesta correcta expandida es $2x^2+2x$ o $\\frac{1}{2}(2x+1)^2$. Dejaré $2x^2+2x+C$ como distractor pero la real correcta es $(2x+1)^2/2$? No, $4x+2$ integrado es $2x^2+2x$. ¡Cierto! Entonces es $2x^2+2x+C$.");
-        addInt("4x+2", "2x^2+2x + C", "4x^2+2x + C", "2x^2+x + C", "4 + C", "Se integra término a término: la integral de $4x$ es $2x^2$, y la de 2 es $2x$.");
-        addInt("\\frac{e^x}{e^x+1}", "\\ln|e^x+1| + C", "e^x\\ln|e^x+1| + C", "\\frac{1}{e^x+1} + C", "e^x + C", "Forma $\\frac{u'}{u}$. El numerador es la derivada del denominador, así que da $\\ln|u|$.");
-        addInt("3x^2(x^3+1)^2", "\\frac{(x^3+1)^3}{3} + C", "(x^3+1)^3 + C", "6x(x^3+1) + C", "\\frac{(x^3+1)^2}{3} + C", "Sustitución $u=x^3+1$, $du=3x^2dx$. Queda $\\int u^2 du = \\frac{u^3}{3}$.");
-        addInt("e^x e^{e^x}", "e^{e^x} + C", "e^{2e^x} + C", "e^x + C", "e^{e^x}e^x + C", "Derivando con regla de la cadena $e^{e^x}$ obtenemos la función original. ¡Piensa en reversa!");
-        addInt("\\frac{1}{\\sqrt{x}}", "2\\sqrt{x} + C", "\\sqrt{x} + C", "-\\frac{1}{2x\\sqrt{x}} + C", "\\frac{1}{2\\sqrt{x}} + C", "Escribe como $x^{-1/2}$. Suma 1 al exponente (da 1/2) y divide por 1/2 (multiplica por 2).");
-        addInt("\\frac{1}{2\\sqrt{x}}", "\\sqrt{x} + C", "2\\sqrt{x} + C", "-\\frac{1}{4x\\sqrt{x}} + C", "\\frac{1}{x} + C", "Derivada básica: la derivada de $\\sqrt{x}$ es exactamente $\\frac{1}{2\\sqrt{x}}$.");
-
-
-        // --- LOGICA DE LA APLICACIÓN ---
-        let preguntasBarajadas = [];
-        let indexActual = 0;
-        let aciertos = 0;
-
-        // Elementos UI
-        const startScreen = document.getElementById('start-screen');
-        const appScreen = document.getElementById('app-screen');
-        const endScreen = document.getElementById('end-screen');
+        /* --- 50 DERIVADAS --- */
+        /* Constantes y lineales */
+        D("7", "0", "7", "x", "1", "La derivada de cualquier número constante siempre es 0.");
+        D("-15", "0", "-1", "-15", "x", "No importa si es negativo, la derivada de una constante es 0.");
+        D("\\pi", "0", "\\pi", "1", "x", "Pi es solo un número, por lo tanto su derivada es 0.");
+        D("x", "1", "x", "0", "\\frac{x^2}{2}", "La derivada de x es 1 (la pendiente de la recta y=x es 1).");
+        D("4x", "4", "4x", "0", "x", "La derivada de kx es k. La x se convierte en 1.");
+        D("-3x", "-3", "-3x", "3", "0", "Se mantiene la constante que multiplica a la x, o sea -3.");
         
-        const progTexto = document.getElementById('progress-text');
-        const scoreTexto = document.getElementById('score-text');
-        const badgeTexto = document.getElementById('question-type-badge');
-        const mathContainer = document.getElementById('math-question');
-        const optionsGrid = document.getElementById('options-grid');
+        /* Potencias básicas */
+        D("x^2", "2x", "\\frac{x^3}{3}", "x", "2", "Baja el exponente (2) a multiplicar y réstale 1 al exponente original.");
+        D("x^3", "3x^2", "3x", "x^2", "\\frac{x^4}{4}", "Regla de la potencia: el 3 baja y el exponente se convierte en 2.");
+        D("x^4", "4x^3", "4x^2", "3x^3", "x^3", "El 4 baja a multiplicar, el nuevo exponente es 3.");
+        D("x^5", "5x^4", "5x", "x^4", "4x^4", "Regla de la potencia directa: n*x^(n-1).");
+        D("x^8", "8x^7", "8x^8", "7x^7", "x^7", "Bajas el 8, le restas 1 al exponente.");
+        D("2x^2", "4x", "2x", "4x^2", "2", "Multiplica el 2 de coeficiente por el 2 del exponente: 4x.");
+        D("3x^3", "9x^2", "6x^2", "9x", "3x^2", "3 por 3 es 9. El exponente queda en 2.");
+        D("5x^2", "10x", "7x", "10", "5x", "5 por 2 es 10, y la x queda elevada a 1.");
+        D("-2x^3", "-6x^2", "-5x^2", "-2x^2", "6x^2", "Respeta el signo: -2 * 3 = -6. Exponente a 2.");
+        D("-x^2", "-2x", "2x", "-x", "x^2", "El menos actúa como -1. Resultado: -2x.");
+        D("\\frac{x^2}{2}", "x", "2x", "1", "\\frac{x}{2}", "El 2 baja y se cancela con el 2 del denominador.");
+        D("\\frac{x^3}{3}", "x^2", "3x^2", "\\frac{x^2}{3}", "x", "El 3 baja y se cancela con el 3 que divide.");
         
-        const feedbackArea = document.getElementById('feedback-area');
-        const feedbackTitle = document.getElementById('feedback-title');
-        const feedbackMessage = document.getElementById('feedback-message');
-        const feedbackIcon = document.getElementById('feedback-icon');
-        const nextBtn = document.getElementById('next-btn');
+        /* Fracciones y raíces (Potencias negativas) */
+        D("\\frac{1}{x}", "-\\frac{1}{x^2}", "\\frac{1}{x^2}", "\\ln(x)", "-1", "1/x es x^(-1). Al derivar baja el -1 y el exponente queda en -2.");
+        D("\\frac{1}{x^2}", "-\\frac{2}{x^3}", "-\\frac{1}{x^3}", "\\frac{2}{x^3}", "-\\frac{2}{x}", "Es x^(-2). Baja el -2 y el exponente resta a -3.");
+        D("\\frac{2}{x}", "-\\frac{2}{x^2}", "\\frac{2}{x^2}", "-2", "2\\ln(x)", "Es 2 * x^(-1). El -1 multiplica al 2, dando -2/x^2.");
+        D("-\\frac{1}{x}", "\\frac{1}{x^2}", "-\\frac{1}{x^2}", "1", "\\ln(x)", "El menos se anula con el -1 que baja del exponente.");
+        D("\\sqrt{x}", "\\frac{1}{2\\sqrt{x}}", "\\frac{1}{\\sqrt{x}}", "x^{-1/2}", "\\frac{2}{3}x^{3/2}", "Raíz de x es x^(1/2). Derivada: (1/2)*x^(-1/2).");
+        D("2\\sqrt{x}", "\\frac{1}{\\sqrt{x}}", "\\frac{2}{\\sqrt{x}}", "x", "\\frac{1}{2\\sqrt{x}}", "El 2 se cancela con el 1/2 que baja del exponente.");
+        D("x^{3/2}", "\\frac{3}{2}\\sqrt{x}", "\\frac{1}{2}x^{1/2}", "\\frac{3}{2}x", "x^{1/2}", "Baja el 3/2 y al restar 1 queda 1/2 (que es raíz de x).");
+        D("3x^{-1}", "-3x^{-2}", "3x^{-2}", "-3", "3\\ln(x)", "Baja el -1 multiplicando al 3. El exponente pasa a -2.");
+        D("-4x^{-2}", "8x^{-3}", "-8x^{-3}", "4x^{-3}", "-4x^{-3}", "-4 por -2 da 8 positivo. El exponente resta a -3.");
+        
+        /* Exponenciales (e) */
+        D("e^x", "e^x", "xe^{x-1}", "e", "x", "La derivada de e^x siempre es e^x.");
+        D("5e^x", "5e^x", "5xe^{x-1}", "5", "e^x", "La constante 5 se mantiene multiplicando a e^x.");
+        D("-e^x", "-e^x", "e^x", "-xe^{x-1}", "0", "El signo menos se mantiene.");
+        D("e^{2x}", "2e^{2x}", "e^{2x}", "2xe^{2x-1}", "\\frac{1}{2}e^{2x}", "Regla de la cadena: derivas el exponente (2) y lo multiplicas al frente.");
+        D("e^{3x}", "3e^{3x}", "e^{3x}", "3xe^{3x-1}", "3e^x", "El 3 del exponente sale a multiplicar por regla de la cadena.");
+        D("e^{-x}", "-e^{-x}", "e^{-x}", "-xe^{-x}", "-e^x", "La derivada del exponente es -1, sale a multiplicar.");
+        D("2e^{4x}", "8e^{4x}", "2e^{4x}", "8xe^{4x}", "6e^{4x}", "2 por la derivada del exponente (4) es 8.");
+        D("e^{x/2}", "\\frac{1}{2}e^{x/2}", "2e^{x/2}", "e^{x/2}", "\\frac{1}{2}e^x", "La derivada de x/2 es 1/2, que pasa al frente.");
+        
+        /* Logaritmos */
+        D("\\ln(x)", "\\frac{1}{x}", "e^x", "\\frac{1}{x^2}", "1", "Regla de memoria: la derivada de ln(x) es siempre 1/x.");
+        D("3\\ln(x)", "\\frac{3}{x}", "\\frac{1}{3x}", "3", "\\frac{3}{x^2}", "El 3 se mantiene y multiplica a 1/x.");
+        D("\\ln(2x)", "\\frac{1}{x}", "\\frac{2}{x}", "\\frac{1}{2x}", "2", "Cadena: (1/(2x)) * 2 = 1/x. ¡La constante interior no afecta!");
+        D("\\ln(5x)", "\\frac{1}{x}", "\\frac{5}{x}", "\\frac{1}{5x}", "5", "Cadena: (1/(5x)) * 5 = 1/x. Igual que ln(x).");
+        D("\\ln(x^2)", "\\frac{2}{x}", "\\frac{1}{x^2}", "\\frac{2x}{x^2}", "2x", "Baja el 2 por propiedad de ln, queda 2*ln(x), su derivada es 2/x.");
+        
+        /* Reglas de Producto, Cociente y Cadena simple */
+        D("xe^x", "e^x(x+1)", "xe^x", "e^x", "e^x(x-1)", "Regla del producto: (1*e^x) + (x*e^x). Factorizando da e^x(x+1).");
+        D("x^2e^x", "xe^x(x+2)", "2xe^x", "x^2e^x", "2e^x", "Producto: 2x*e^x + x^2*e^x. Factorizando queda xe^x(2+x).");
+        D("x\\ln(x)", "\\ln(x)+1", "\\frac{1}{x}", "1", "\\ln(x)", "Producto: (1*ln(x)) + (x * 1/x) = ln(x) + 1.");
+        D("\\frac{e^x}{x}", "\\frac{e^x(x-1)}{x^2}", "\\frac{e^x}{x^2}", "e^x\\ln(x)", "\\frac{e^x(x+1)}{x^2}", "Cociente: (u'v - uv')/v^2. Arriba queda e^x*x - e^x*1.");
+        D("\\frac{\\ln(x)}{x}", "\\frac{1-\\ln(x)}{x^2}", "\\frac{1}{x^2}", "\\frac{\\ln(x)-1}{x^2}", "\\frac{1}{x}", "Cociente: ( (1/x)*x - ln(x)*1 ) / x^2 = (1 - ln(x))/x^2.");
+        D("(x+1)^2", "2(x+1)", "4(x+1)", "2x+1", "2", "Cadena: baja el 2, la derivada de lo de adentro es 1. Queda 2(x+1).");
+        D("(2x+3)^2", "4(2x+3)", "2(2x+3)", "4x+3", "2", "Cadena: baja el 2, multiplica por la derivada de adentro (2). 2*2=4.");
+        D("(x^2+1)^2", "4x(x^2+1)", "2(x^2+1)", "2x(x^2+1)", "4(x^2+1)", "Cadena: baja el 2, por (x^2+1), por la derivada interna (2x). Da 4x.");
+        D("e^{x^2}", "2xe^{x^2}", "e^{2x}", "x^2e^{x^2}", "2e^{x^2}", "Cadena: la exponencial se mantiene y multiplica por la derivada de x^2 (2x).");
+        D("\\frac{1}{x+1}", "-\\frac{1}{(x+1)^2}", "\\frac{1}{(x+1)^2}", "-1", "\\ln(x+1)", "Piensa en (x+1)^(-1). Baja el -1 y eleva a -2.");
 
-        function shuffleArray(array) {
-            for (let i = array.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [array[i], array[j]] = [array[j], array[i]];
+        /* --- 50 INTEGRALES --- */
+        /* Constantes y lineales */
+        I("0", "C", "0", "x + C", "1 + C", "La integral de 0 es una constante cualquiera (C), ya que su derivada es 0.");
+        I("1", "x + C", "0", "x^2 + C", "1 + C", "La función que derivas para obtener 1 es x.");
+        I("5", "5x + C", "0", "5 + C", "x + C", "Al integrar una constante, solo le agregas la x.");
+        I("-2", "-2x + C", "-2 + C", "0", "-x^2 + C", "La constante sale, y se multiplica por x.");
+        I("\\pi", "\\pi x + C", "0", "\\pi + C", "x + C", "Pi es una constante. Su integral es Pi * x.");
+        
+        /* Potencias básicas */
+        I("x", "\\frac{x^2}{2} + C", "1 + C", "x^2 + C", "\\frac{x^3}{3} + C", "Suma 1 al exponente invisible 1 (da 2) y divide por 2.");
+        I("2x", "x^2 + C", "2 + C", "2x^2 + C", "\\frac{2x^3}{3} + C", "Piensa al revés: ¿Qué derivas para que dé 2x? ¡El x^2!");
+        I("x^2", "\\frac{x^3}{3} + C", "2x + C", "x^3 + C", "\\frac{x^2}{3} + C", "Suma 1 al exponente (3) y divide por 3.");
+        I("3x^2", "x^3 + C", "6x + C", "3x^3 + C", "\\frac{x^4}{4} + C", "La derivada de x^3 es exactamente 3x^2.");
+        I("x^3", "\\frac{x^4}{4} + C", "3x^2 + C", "\\frac{x^3}{4} + C", "x^4 + C", "Exponente sube a 4, divides entre 4.");
+        I("4x^3", "x^4 + C", "12x^2 + C", "4x^4 + C", "\\frac{4x^4}{3} + C", "La derivada directa de x^4 es 4x^3.");
+        I("x^4", "\\frac{x^5}{5} + C", "4x^3 + C", "x^5 + C", "\\frac{x^4}{5} + C", "Regla de la potencia, exponente sube a 5.");
+        I("5x^4", "x^5 + C", "20x^3 + C", "5x^5 + C", "\\frac{x^5}{4} + C", "Piensa a la inversa: x^5 derivado es 5x^4.");
+        I("-2x", "-x^2 + C", "-2 + C", "x^2 + C", "-\\frac{x^2}{2} + C", "El menos se mantiene. La integral de 2x es x^2.");
+        I("\\frac{x^2}{2}", "\\frac{x^3}{6} + C", "x + C", "\\frac{x^3}{3} + C", "\\frac{x^3}{2} + C", "Al integrar x^2 queda x^3/3. El 3 multiplica al 2 del denominador.");
+        I("2x^3", "\\frac{x^4}{2} + C", "6x^2 + C", "\\frac{2x^4}{3} + C", "2x^4 + C", "Al integrar queda 2x^4/4. Simplificando es x^4/2.");
+        I("-x^2", "-\\frac{x^3}{3} + C", "-2x + C", "\\frac{x^3}{3} + C", "-x^3 + C", "Misma regla de potencia, el negativo solo acompaña.");
+        
+        /* 1/x y Potencias negativas */
+        I("\\frac{1}{x}", "\\ln|x| + C", "-\\frac{1}{x^2} + C", "\\frac{1}{x^2} + C", "\\ln(x^2) + C", "Regla especial fundamental: la integral de 1/x es el logaritmo natural.");
+        I("\\frac{2}{x}", "2\\ln|x| + C", "-\\frac{2}{x^2} + C", "\\ln|2x| + C", "\\frac{2}{x^2} + C", "El 2 sale de la integral, queda 2 por ln(x).");
+        I("-\\frac{1}{x}", "-\\ln|x| + C", "\\frac{1}{x^2} + C", "\\ln|-x| + C", "-\\frac{1}{x^2} + C", "El signo menos se mantiene afuera del logaritmo.");
+        I("\\frac{1}{2x}", "\\frac{1}{2}\\ln|x| + C", "-\\frac{1}{4x^2} + C", "\\ln|2x| + C", "2\\ln|x| + C", "Sacamos el 1/2 de la integral, queda (1/2)*ln(x).");
+        I("x^{-2}", "-\\frac{1}{x} + C", "-2x^{-3} + C", "\\frac{x^{-3}{-3}} + C", "x^{-1} + C", "Suma 1 al exponente (-1) y divide por -1. Da -1/x.");
+        I("\\frac{1}{x^2}", "-\\frac{1}{x} + C", "-\\frac{2}{x^3} + C", "\\frac{1}{x} + C", "\\ln|x^2| + C", "Esto es x^(-2). ¡No es logaritmo! Su integral es -1/x.");
+        I("\\frac{3}{x^2}", "-\\frac{3}{x} + C", "-\\frac{6}{x^3} + C", "3\\ln|x^2| + C", "\\frac{3}{x} + C", "3 por la integral de x^(-2). Da -3/x.");
+        I("x^{-3}", "-\\frac{1}{2x^2} + C", "-3x^{-4} + C", "\\frac{1}{2x^2} + C", "-x^{-2} + C", "Suma 1 al exponente (-2) y divide por -2.");
+        I("\\frac{1}{x^3}", "-\\frac{1}{2x^2} + C", "-\\frac{3}{x^4} + C", "\\frac{1}{2x^2} + C", "-\\frac{1}{x^2} + C", "Igual que x^(-3). Sumas 1 y divides. Cuidado con derivar (opción 2).");
+        I("-\\frac{2}{x^3}", "\\frac{1}{x^2} + C", "\\frac{6}{x^4} + C", "-\\frac{1}{x^2} + C", "\\frac{2}{x^2} + C", "Al integrar, divides por -2, cancelando el coeficiente -2.");
+        
+        /* Exponenciales (e) */
+        I("e^x", "e^x + C", "xe^{x-1} + C", "e^x\\ln(e) + C", "x + C", "La integral de e^x es simplemente e^x.");
+        I("3e^x", "3e^x + C", "3xe^{x-1} + C", "e^{3x} + C", "e^x + C", "La constante 3 se mantiene.");
+        I("-e^x", "-e^x + C", "-xe^{x-1} + C", "e^x + C", "0 + C", "El menos se mantiene.");
+        I("e^{2x}", "\\frac{1}{2}e^{2x} + C", "2e^{2x} + C", "e^{2x} + C", "\\frac{1}{3}e^{3x} + C", "Al integrar, DIVIDES por la derivada del exponente (regla de sustitución).");
+        I("e^{5x}", "\\frac{1}{5}e^{5x} + C", "5e^{5x} + C", "e^{5x} + C", "5xe^{5x} + C", "El 5 del exponente pasa dividiendo.");
+        I("e^{-x}", "-e^{-x} + C", "e^{-x} + C", "-xe^{-x} + C", "e^{-x^2} + C", "Divides por -1, que equivale a poner un signo menos.");
+        I("4e^{2x}", "2e^{2x} + C", "8e^{2x} + C", "4e^{2x} + C", "2xe^{2x} + C", "Divides el 4 entre la derivada del exponente (2). Queda 2.");
+        I("6e^{3x}", "2e^{3x} + C", "18e^{3x} + C", "6e^{3x} + C", "2xe^{3x} + C", "Divides 6 entre 3. Da 2.");
+        I("e^{x/2}", "2e^{x/2} + C", "\\frac{1}{2}e^{x/2} + C", "e^{x/2} + C", "xe^{x/2} + C", "Dividir por 1/2 es lo mismo que multiplicar por 2.");
+        I("e^{-2x}", "-\\frac{1}{2}e^{-2x} + C", "-2e^{-2x} + C", "\\frac{1}{2}e^{-2x} + C", "-e^{-2x} + C", "El -2 del exponente pasa a dividir abajo.");
+        
+        /* Sustitución e integrales compuestas mentales */
+        I("2xe^{x^2}", "e^{x^2} + C", "2e^{x^2} + C", "x^2e^{x^2} + C", "e^{2x} + C", "Piensa a la inversa: si derivas e^(x^2) usando la cadena, te da justo esto.");
+        I("xe^{x^2}", "\\frac{1}{2}e^{x^2} + C", "e^{x^2} + C", "2xe^{x^2} + C", "x^2e^{x^2} + C", "Falta el 2 de la derivada interna, así que compensas dividiendo por 2.");
+        I("\\frac{2x}{x^2+1}", "\\ln|x^2+1| + C", "\\frac{1}{x^2+1} + C", "2\\ln|x^2+1| + C", "x^2+1 + C", "Forma u'/u. Arriba está exactamente la derivada de lo de abajo.");
+        I("\\frac{x}{x^2+1}", "\\frac{1}{2}\\ln|x^2+1| + C", "\\ln|x^2+1| + C", "\\frac{1}{x^2+1} + C", "2\\ln|x^2+1| + C", "Arriba falta un 2 para ser la derivada exacta, así que multiplicas por 1/2 afuera.");
+        I("4x+2", "2x^2+2x + C", "4x^2+2x + C", "2x^2+x + C", "4 + C", "Integra parte por parte: la integral de 4x es 2x^2 y la de 2 es 2x.");
+        I("2x-3", "x^2-3x + C", "2x^2-3x + C", "x^2-3 + C", "2 + C", "Parte por parte: 2x pasa a ser x^2 y -3 pasa a ser -3x.");
+        I("\\frac{e^x}{e^x+1}", "\\ln|e^x+1| + C", "e^x\\ln|e^x+1| + C", "\\frac{1}{e^x+1} + C", "e^x + C", "Sustitución rápida: el numerador es la derivada del denominador, es decir, logaritmo.");
+        I("3x^2(x^3+1)^2", "\\frac{(x^3+1)^3}{3} + C", "(x^3+1)^3 + C", "6x(x^3+1) + C", "\\frac{(x^3+1)^2}{3} + C", "Piensa en u^2 du. La integral de u^2 es u^3/3.");
+        I("\\frac{1}{\\sqrt{x}}", "2\\sqrt{x} + C", "\\sqrt{x} + C", "-\\frac{1}{2x\\sqrt{x}} + C", "\\frac{1}{2\\sqrt{x}} + C", "Es x^(-1/2). Sumas 1 (queda 1/2) y divides por 1/2 (que es multiplicar por 2).");
+        I("\\frac{1}{2\\sqrt{x}}", "\\sqrt{x} + C", "2\\sqrt{x} + C", "-\\frac{1}{4x\\sqrt{x}} + C", "\\frac{1}{x} + C", "Piensa al revés: la derivada clásica de raíz de x es 1/(2*raíz(x)).");
+
+
+        /* LÓGICA DE LA APLICACIÓN */
+        var estado = {
+            preguntasBarajadas: [],
+            indiceActual: 0,
+            aciertos: 0
+        };
+
+        /* Elementos DOM guardados tras cargar la página */
+        var UI = {};
+
+        /* Inicializar al cargar la página */
+        window.onload = function() {
+            // Recolectar Elementos
+            UI.pantallaInicio = document.getElementById('pantalla-inicio');
+            UI.pantallaQuiz = document.getElementById('pantalla-quiz');
+            UI.pantallaFinal = document.getElementById('pantalla-final');
+            
+            UI.btnEmpezar = document.getElementById('btn-empezar');
+            UI.btnReiniciar = document.getElementById('btn-reiniciar');
+            UI.btnSiguiente = document.getElementById('btn-siguiente');
+            
+            UI.progresoTexto = document.getElementById('progreso-texto');
+            UI.puntajeTexto = document.getElementById('puntaje-texto');
+            UI.tipoBadge = document.getElementById('tipo-badge');
+            UI.preguntaMatematica = document.getElementById('pregunta-matematica');
+            UI.contenedorOpciones = document.getElementById('contenedor-opciones');
+            
+            UI.cajaFeedback = document.getElementById('caja-feedback');
+            UI.tituloFeedback = document.getElementById('titulo-feedback');
+            UI.textoFeedback = document.getElementById('texto-feedback');
+            UI.resultadoFinal = document.getElementById('resultado-final');
+            UI.mensajeFinal = document.getElementById('mensaje-final');
+
+            // Asignar Eventos (sin funciones flecha ni llamadas online)
+            UI.btnEmpezar.onclick = iniciarQuiz;
+            UI.btnSiguiente.onclick = cargarSiguientePregunta;
+            UI.btnReiniciar.onclick = function() { location.reload(); };
+        };
+
+        function mezclarArreglo(arreglo) {
+            var actual = arreglo.length, temporal, aleatorio;
+            while (actual !== 0) {
+                aleatorio = Math.floor(Math.random() * actual);
+                actual -= 1;
+                temporal = arreglo[actual];
+                arreglo[actual] = arreglo[aleatorio];
+                arreglo[aleatorio] = temporal;
             }
+            return arreglo;
         }
 
-        function iniciarPractica() {
-            startScreen.classList.add('hidden');
-            appScreen.classList.remove('hidden');
-            appScreen.classList.add('flex');
+        function iniciarQuiz() {
+            // Ocultar inicio, mostrar quiz
+            UI.pantallaInicio.className = "card hidden";
+            UI.pantallaQuiz.className = "card";
             
-            // Mezclamos todas las preguntas
-            preguntasBarajadas = [...preguntas];
-            shuffleArray(preguntasBarajadas);
-            indexActual = 0;
-            aciertos = 0;
+            // Preparar preguntas
+            estado.preguntasBarajadas = bancoPreguntas.slice();
+            mezclarArreglo(estado.preguntasBarajadas);
+            estado.indiceActual = 0;
+            estado.aciertos = 0;
             
-            mostrarPregunta();
+            mostrarPreguntaDOM();
         }
 
-        function mostrarPregunta() {
-            if (indexActual >= preguntasBarajadas.length) {
-                finalizarPractica();
+        function mostrarPreguntaDOM() {
+            if (estado.indiceActual >= estado.preguntasBarajadas.length) {
+                terminarQuiz();
                 return;
             }
 
-            // Reset UI
-            feedbackArea.classList.add('hidden');
-            optionsGrid.innerHTML = '';
-            
-            const q = preguntasBarajadas[indexActual];
-            
-            // Actualizar header
-            progTexto.innerText = `${indexActual + 1} / ${preguntasBarajadas.length}`;
-            scoreTexto.innerText = aciertos;
+            var q = estado.preguntasBarajadas[estado.indiceActual];
 
-            // Configurar tarjeta
-            if (q.tipo === 'Derivada') {
-                badgeTexto.innerText = 'Derivada';
-                badgeTexto.className = 'px-4 py-1 rounded-full text-sm font-bold uppercase tracking-wide bg-purple-100 text-purple-700';
+            // Resetear UI
+            UI.cajaFeedback.className = "feedback-box hidden clearfix";
+            UI.btnSiguiente.className = "btn-next hidden";
+            UI.contenedorOpciones.innerHTML = "";
+            
+            // Actualizar contadores
+            UI.progresoTexto.innerText = "Pregunta: " + (estado.indiceActual + 1) + " / " + estado.preguntasBarajadas.length;
+            UI.puntajeTexto.innerText = estado.aciertos;
+
+            // Etiqueta (Derivada o Integral)
+            if (q.tipo === "Derivada") {
+                UI.tipoBadge.innerText = "Derivada";
+                UI.tipoBadge.className = "badge derivada";
             } else {
-                badgeTexto.innerText = 'Integral (Primitiva)';
-                badgeTexto.className = 'px-4 py-1 rounded-full text-sm font-bold uppercase tracking-wide bg-blue-100 text-blue-700';
+                UI.tipoBadge.innerText = "Integral (Primitiva)";
+                UI.tipoBadge.className = "badge integral";
             }
 
-            // Setear la fórmula (encerrada en $$ para MathJax display mode)
-            let formulaHtml = `$$f(x) = ${q.pre}$$`;
-            if(q.tipo === 'Integral'){
-                 formulaHtml = `$$\\int ${q.pre} \\, dx$$`;
+            // Crear el HTML de la fórmula
+            var formulaStr = "$$f(x) = " + q.pregunta + "$$";
+            if (q.tipo === "Integral") {
+                formulaStr = "$$\\int " + q.pregunta + " \\, dx$$";
             }
-            mathContainer.innerHTML = formulaHtml;
+            UI.preguntaMatematica.innerHTML = formulaStr;
 
-            // Preparar opciones
-            let opciones = [
-                { texto: q.res, correcta: true },
-                { texto: q.dist[0], correcta: false },
-                { texto: q.dist[1], correcta: false },
-                { texto: q.dist[2], correcta: false }
+            // Crear y mezclar opciones
+            var opciones = [
+                { texto: q.correcta, esCorrecta: true },
+                { texto: q.distractores[0], esCorrecta: false },
+                { texto: q.distractores[1], esCorrecta: false },
+                { texto: q.distractores[2], esCorrecta: false }
             ];
-            shuffleArray(opciones);
+            mezclarArreglo(opciones);
 
             // Generar botones
-            opciones.forEach((opt, i) => {
-                const btn = document.createElement('button');
-                // Envolvemos el texto de la opción en delimitadores inline $...$
-                btn.innerHTML = `$${opt.texto}$`;
-                btn.className = 'option-btn bg-white border-2 border-gray-200 text-gray-800 font-medium py-4 px-6 rounded-xl text-lg md:text-xl w-full shadow-sm hover:border-blue-400 focus:outline-none';
+            for (var i = 0; i < opciones.length; i++) {
+                var btn = document.createElement("button");
+                btn.className = "option-btn";
+                btn.innerHTML = "$" + opciones[i].texto + "$";
                 
-                // Marcamos la respuesta correcta usando data-attributes para evitar problemas al leer innerHTML
-                if (opt.correcta) {
-                    btn.dataset.correcta = "true";
+                // Usamos una función de cierre (closure) clásico para mantener el contexto
+                (function(opt) {
+                    btn.onclick = function() {
+                        procesarRespuesta(this, opt.esCorrecta, q);
+                    };
+                })(opciones[i]);
+                
+                // Guardamos si es la correcta en un atributo para poder iluminarla si el usuario falla
+                if (opciones[i].esCorrecta) {
+                    btn.setAttribute("data-correcta", "true");
                 }
 
-                btn.onclick = () => verificarRespuesta(btn, opt.correcta, q);
-                optionsGrid.appendChild(btn);
-            });
-
-            // Re-renderizar matemáticas
-            if (window.MathJax) {
-                MathJax.typesetPromise([mathContainer, optionsGrid]).catch((err) => console.log(err));
+                UI.contenedorOpciones.appendChild(btn);
             }
+
+            // Llamar a MathJax
+            renderizarMatematicas();
         }
 
-        function verificarRespuesta(btnSeleccionado, esCorrecta, q) {
-            // Deshabilitar todos los botones para que no haga doble clic
-            const botones = optionsGrid.querySelectorAll('button');
-            botones.forEach(b => {
-                b.disabled = true;
-                b.classList.add('opacity-80', 'cursor-not-allowed');
-            });
+        function procesarRespuesta(botonPresionado, esCorrecta, q) {
+            // Deshabilitar todos los botones
+            var botones = UI.contenedorOpciones.getElementsByTagName("button");
+            for (var i = 0; i < botones.length; i++) {
+                botones[i].disabled = true;
+            }
+
+            UI.btnSiguiente.className = "btn-next"; // Mostrar botón siguiente
 
             if (esCorrecta) {
-                // Correcto!
-                btnSeleccionado.classList.add('correct-anim');
-                aciertos++;
-                scoreTexto.innerText = aciertos;
+                botonPresionado.className = "option-btn correct";
+                estado.aciertos += 1;
+                UI.puntajeTexto.innerText = estado.aciertos;
                 
-                // Mostrar feedback positivo corto y avanzar automático
-                feedbackArea.classList.remove('hidden');
-                feedbackArea.classList.add('border-green-500');
-                feedbackArea.classList.remove('border-red-500');
-                feedbackIcon.innerText = '✅';
-                feedbackTitle.innerText = '¡Excelente!';
-                feedbackTitle.classList.add('text-green-600');
-                feedbackTitle.classList.remove('text-red-600');
-                feedbackMessage.innerHTML = '¡Muy buen cálculo mental!';
+                UI.cajaFeedback.className = "feedback-box success clearfix";
+                UI.tituloFeedback.innerText = "¡Correcto!";
+                UI.textoFeedback.innerText = "¡Excelente cálculo mental!";
                 
-                nextBtn.classList.remove('bg-gray-800', 'hover:bg-gray-900');
-                nextBtn.classList.add('bg-green-600', 'hover:bg-green-700');
-
-                // Auto-avanzar después de 1.2 seg si fue correcta
-                setTimeout(() => {
-                    siguientePregunta();
-                }, 1200);
-
+                // Avanza automático en 1 segundo si es correcto
+                setTimeout(function() { cargarSiguientePregunta(); }, 1000);
             } else {
-                // Incorrecto
-                btnSeleccionado.classList.add('incorrect-anim');
+                botonPresionado.className = "option-btn incorrect";
                 
-                // Buscar el correcto y resaltarlo suavemente
-                botones.forEach(b => {
-                    if (b.dataset.correcta === "true") {
-                        b.classList.remove('bg-white');
-                        b.classList.add('bg-green-50', 'border-green-400');
+                // Buscar y marcar la correcta visualmente
+                for (var j = 0; j < botones.length; j++) {
+                    if (botones[j].getAttribute("data-correcta") === "true") {
+                        botones[j].style.borderColor = "#2ecc71";
+                        botones[j].style.backgroundColor = "#d5f5e3";
                     }
-                });
-
-                // Mostrar explicación del profesor
-                feedbackArea.classList.remove('hidden');
-                feedbackArea.classList.remove('border-green-500');
-                feedbackArea.classList.add('border-red-500');
-                feedbackIcon.innerText = '👨‍🏫';
-                feedbackTitle.innerText = '¡Casi! Repasemos la regla:';
-                feedbackTitle.classList.remove('text-green-600');
-                feedbackTitle.classList.add('text-red-600');
-                
-                feedbackMessage.innerHTML = q.explicacion + `<br><br><strong>Respuesta correcta:</strong> $${q.res}$`;
-                
-                nextBtn.classList.remove('bg-green-600', 'hover:bg-green-700');
-                nextBtn.classList.add('bg-gray-800', 'hover:bg-gray-900');
-
-                // Renderizar MathJax en el feedback
-                if (window.MathJax) {
-                    MathJax.typesetPromise([feedbackMessage]).catch((err) => console.log(err));
                 }
+
+                UI.cajaFeedback.className = "feedback-box error clearfix";
+                UI.tituloFeedback.innerText = "Casi... repasemos la regla:";
+                UI.textoFeedback.innerHTML = q.explicacion + "<br><br><strong>Respuesta correcta:</strong> $" + q.correcta + "$";
+                
+                renderizarMatematicas();
             }
         }
 
-        function siguientePregunta() {
-            indexActual++;
-            mostrarPregunta();
+        function cargarSiguientePregunta() {
+            estado.indiceActual += 1;
+            mostrarPreguntaDOM();
         }
 
-        function finalizarPractica() {
-            appScreen.classList.add('hidden');
-            appScreen.classList.remove('flex');
-            endScreen.classList.remove('hidden');
-            endScreen.classList.add('flex');
-
-            document.getElementById('final-score').innerText = aciertos;
-            const finalMsg = document.getElementById('final-message');
+        function terminarQuiz() {
+            UI.pantallaQuiz.className = "card hidden";
+            UI.pantallaFinal.className = "card";
             
-            if (aciertos === 100) {
-                finalMsg.innerText = "¡Perfecto! Eres una máquina del cálculo diferencial e integral.";
-            } else if (aciertos >= 80) {
-                finalMsg.innerText = "¡Sobresaliente! Tu cálculo mental es rapidísimo. Tuviste algunos errores mínimos.";
-            } else if (aciertos >= 50) {
-                finalMsg.innerText = "¡Buen trabajo! Vas por muy buen camino, te recomiendo darle otra pasada para pulir los detalles.";
-            } else {
-                finalMsg.innerText = "¡No te desanimes! El cálculo mental requiere práctica. Lee bien las explicaciones y vuelve a intentarlo, notarás la mejora.";
-            }
+            UI.resultadoFinal.innerText = "Puntaje: " + estado.aciertos + " de 100";
+            
+            var mensaje = "";
+            if (estado.aciertos === 100) { mensaje = "¡Nivel Dios! No te equivocaste en nada."; }
+            else if (estado.aciertos >= 85) { mensaje = "¡Excelente! Tienes el cálculo mental muy afilado."; }
+            else if (estado.aciertos >= 60) { mensaje = "Buen trabajo, aunque te sugiero seguir practicando algunas reglas específicas."; }
+            else { mensaje = "El cálculo mental es un músculo. ¡No te desanimes y vuelve a entrenarlo!"; }
+            
+            UI.mensajeFinal.innerText = mensaje;
         }
 
+        function renderizarMatematicas() {
+            if (window.MathJax && MathJax.typesetPromise) {
+                // Se ejecuta de manera segura asegurando que el DOM se haya actualizado
+                MathJax.typesetPromise().catch(function (err) {
+                    console.error("Error en MathJax:", err);
+                });
+            }
+        }
     </script>
 </body>
 </html>
