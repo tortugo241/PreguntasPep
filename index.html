@@ -3,2368 +3,473 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Trivia: Pensamiento Económico y Político</title>
+    <title>Profe de Cálculo - Práctica Mental</title>
+    <!-- Tailwind CSS para los estilos responsivos -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <!-- MathJax para renderizar las fórmulas matemáticas de forma hermosa -->
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']]
+            }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
-        body { font-family: 'Inter', sans-serif; }
-        .option-btn { transition: all 0.2s; }
-        .option-btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 4px 6px -1px rgba(56, 152, 64, 1); }
-        .fade-in { animation: fadeIn 0.3s ease-in; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        /* Estilos personalizados para animaciones suaves */
+        .option-btn {
+            transition: all 0.2s ease-in-out;
+        }
+        .option-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .option-btn:active:not(:disabled) {
+            transform: translateY(0);
+        }
+        .correct-anim {
+            background-color: #22c55e !important; /* verde */
+            color: white !important;
+            border-color: #16a34a !important;
+        }
+        .incorrect-anim {
+            background-color: #ef4444 !important; /* rojo */
+            color: white !important;
+            border-color: #dc2626 !important;
+        }
+        .math-large {
+            font-size: 1.5rem;
+        }
+        @media (min-width: 768px) {
+            .math-large {
+                font-size: 2rem;
+            }
+        }
     </style>
 </head>
-<body class="bg-slate-100 text-slate-800 min-h-screen flex flex-col">
+<body class="bg-gray-50 text-gray-800 font-sans min-h-screen flex flex-col items-center">
 
-    <!-- Header / Scoreboard -->
-    <header class="bg-slate-800 text-white p-4 shadow-lg sticky top-0 z-10" style="background-color:green">
-        <div class="max-w-4xl mx-auto flex justify-between items-center">
-            <div>
-                <h1 class="text-lg md:text-xl font-bold leading-tight">Trivia Examen PEP</h1>
-                <p class="text-xs text-slate-400">Para estudiar para el examen de Pensamiento Económico y Político</p>
-            </div>
-            <div class="flex space-x-4 text-sm font-bold">
-                <div class="flex items-center text-green-400">
-                    <i class="fas fa-check-circle mr-1"></i> <span id="score-correct">0</span>
-                </div>
-                <div class="flex items-center text-red-400">
-                    <i class="fas fa-times-circle mr-1"></i> <span id="score-incorrect">0</span>
-                </div>
-            </div>
-        </div>
-    </header>
-
-    <!-- Main Game Area -->
-    <main class="flex-grow flex items-center justify-center p-4">
-        <div class="w-full max-w-3xl bg-white rounded-xl shadow-2xl overflow-hidden fade-in" id="game-container">
-            
-            <!-- Progress Bar -->
-            <div class="w-full bg-slate-200 h-2">
-                <div id="progress-bar" class="bg-blue-600 h-2 transition-all duration-500" style="width: 0%"></div>
-            </div>
-
-            <!-- Question Content -->
-            <div class="p-6 md:p-8">
-                
-                <!-- Question Counter & Text -->
-                <div class="mb-6 ">
-                    <span class="inline-block text-xs px-2 py-1 rounded-full font-semibold mb-2 text-white" id="question-tracker" style="background-color:green">Cargando...</span>
-                    <h2 id="question-text" class="text-xl md:text-2xl font-bold text-slate-900 leading-snug">
-                        Iniciando la aplicación...
-                    </h2>
-                </div>
-
-                <!-- Options Grid -->
-                <div id="options-container" class="grid grid-cols-1 gap-3">
-                    <!-- Buttons will be injected here -->
-                </div>
-
-                <!-- Feedback Section (Hidden by default) -->
-                <div id="feedback-area" class="mt-6 hidden p-4 rounded-lg border-l-4">
-                    <p id="feedback-message" class="font-bold text-lg"></p>
-                    <p id="feedback-detail" class="text-sm mt-1"></p>
-                    <button onclick="nextQuestion()" class="mt-4 bg-slate-800 hover:bg-slate-700 text-white font-bold py-2 px-6 rounded-lg shadow transition-colors w-full md:w-auto">
-                        Siguiente Pregunta <i class="fas fa-arrow-right ml-2"></i>
-                    </button>
-                </div>
-
-            </div>
-        </div>
-
-        <!-- Game Over Screen (Hidden initially) -->
-        <div id="game-over" class="hidden w-full max-w-lg bg-white rounded-xl shadow-2xl p-8 text-center fade-in">
-            <div class="text-6xl mb-4">🎓</div>
-            <h2 class="text-2xl font-bold mb-2">¡Fin de la Trivia!</h2>
-            <p class="text-slate-600 mb-6">Has respondido todas las preguntas.</p>
-            
-            <div class="grid grid-cols-2 gap-4 mb-6">
-                <div class="bg-green-100 p-4 rounded-lg">
-                    <p class="text-green-800 text-sm font-bold">Correctas</p>
-                    <p class="text-3xl text-green-600" id="final-correct">0</p>
-                </div>
-                <div class="bg-red-100 p-4 rounded-lg">
-                    <p class="text-red-800 text-sm font-bold">Incorrectas</p>
-                    <p class="text-3xl text-red-600" id="final-incorrect">0</p>
-                </div>
-            </div>
-
-            <button onclick="restartGame()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg w-full transition-colors">
-                Reiniciar Trivia
+    <!-- Pantalla de Inicio -->
+    <div id="start-screen" class="flex flex-col items-center justify-center min-h-screen w-full max-w-2xl px-4 text-center">
+        <div class="bg-white p-8 rounded-2xl shadow-xl w-full">
+            <h1 class="text-3xl md:text-4xl font-bold text-blue-600 mb-4">🧠 Práctica Mental de Cálculo</h1>
+            <p class="text-lg text-gray-600 mb-6">
+                ¡Hola! Soy tu profe virtual. He preparado <strong>100 ejercicios</strong> (50 derivadas y 50 integrales) sin trigonometría, ideales para mecanizar y agilizar tu mente.
+            </p>
+            <ul class="text-left text-gray-600 mb-8 space-y-2 max-w-md mx-auto bg-blue-50 p-4 rounded-lg">
+                <li>✅ Regla de la potencia y constantes.</li>
+                <li>✅ Exponenciales ($e^x$) y logaritmos.</li>
+                <li>✅ Regla del producto, cociente y cadena simple.</li>
+                <li>✅ Opciones múltiples y explicaciones al fallar.</li>
+            </ul>
+            <button onclick="iniciarPractica()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-full shadow-lg text-xl transition transform hover:scale-105">
+                ¡Empezar a Entrenar!
             </button>
         </div>
-    </main>
+    </div>
 
-    <footer class="bg-slate-50 text-slate-400 text-center py-4 text-xs">
-        <p>By Juanech | juaneo2006@gmail.com</p>
-    </footer>
+    <!-- Pantalla Principal de la App -->
+    <div id="app-screen" class="hidden w-full max-w-3xl px-4 py-8 flex-col items-center min-h-screen">
+        
+        <!-- Header / Stats -->
+        <div class="w-full flex justify-between items-center mb-6 bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+            <div>
+                <p class="text-sm text-gray-500 font-semibold uppercase tracking-wider">Progreso</p>
+                <p id="progress-text" class="text-xl font-bold text-blue-600">1 / 100</p>
+            </div>
+            <div class="text-right">
+                <p class="text-sm text-gray-500 font-semibold uppercase tracking-wider">Aciertos</p>
+                <p id="score-text" class="text-xl font-bold text-green-600">0</p>
+            </div>
+        </div>
+
+        <!-- Tarjeta de Pregunta -->
+        <div class="bg-white w-full rounded-2xl shadow-md p-6 md:p-10 mb-6 border-t-4 border-blue-500">
+            <div class="flex items-center justify-center mb-4">
+                <span id="question-type-badge" class="px-4 py-1 rounded-full text-sm font-bold uppercase tracking-wide">
+                    Tipo
+                </span>
+            </div>
+            <h2 class="text-center text-gray-700 text-lg md:text-xl font-medium mb-4" id="instruction-text">
+                Encuentra la solución mentalmente:
+            </h2>
+            <div id="math-question" class="text-center math-large font-bold mb-8 text-black min-h-[4rem] flex items-center justify-center">
+                <!-- Fomula va aquí -->
+            </div>
+
+            <!-- Opciones -->
+            <div id="options-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Botones generados en JS -->
+            </div>
+        </div>
+
+        <!-- Área de Retroalimentación del Profe -->
+        <div id="feedback-area" class="hidden w-full bg-white rounded-2xl shadow-lg p-6 border-l-4">
+            <div class="flex items-start">
+                <div id="feedback-icon" class="text-3xl mr-4 mt-1">👨‍🏫</div>
+                <div>
+                    <h3 id="feedback-title" class="font-bold text-lg mb-1">Título Feedback</h3>
+                    <p id="feedback-message" class="text-gray-700 mb-4">Mensaje de explicación.</p>
+                    <button id="next-btn" onclick="siguientePregunta()" class="bg-gray-800 hover:bg-gray-900 text-white font-semibold py-2 px-6 rounded-lg shadow transition">
+                        Siguiente Ejercicio ➔
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Pantalla Final -->
+    <div id="end-screen" class="hidden flex-col items-center justify-center min-h-screen w-full max-w-2xl px-4 text-center">
+        <div class="bg-white p-8 rounded-2xl shadow-xl w-full border-t-8 border-green-500">
+            <h1 class="text-4xl font-bold text-gray-800 mb-4">¡Entrenamiento Completado! 🎉</h1>
+            <p class="text-xl text-gray-600 mb-2">Resolviste los 100 ejercicios.</p>
+            <p class="text-2xl font-bold text-blue-600 mb-8">Puntaje Final: <span id="final-score"></span> / 100</p>
+            <p id="final-message" class="text-lg text-gray-700 mb-8 italic">
+                <!-- Mensaje motivacional generado en JS -->
+            </p>
+            <button onclick="location.reload()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-full shadow-lg text-xl transition transform hover:scale-105">
+                Volver a Entrenar 🔄
+            </button>
+        </div>
+    </div>
 
     <script>
-        // ==========================================
-        // DATA PROCESSING
-        // ==========================================
-        
-        // El texto completo proporcionado por el usuario
-        const rawData = `
-1. Bajo el contexto del dilema del tranvía propuesto por Sandel, ¿a qué corresponde el "bien común"?
-A) Respetar las decisiones del azar
-B) Bienestar de la mayoría
-C) Preservar los derechos naturales del hombre
-D) Abolir el sistema de justicia corrupto
-Respuesta Correcta: B
-
-2. ¿A qué alude Sandel al decir que "los mercados respetan la libertad individual"?
-A) Las personas le dan por sí mismas el valor a los bienes que se intercambian
-B) Las libertad de colusión está permitida siempre y cuando los partícipes compartan dichos valores
-C) Las personas tienen permitido ser independientes e individualistas en temas de beneficio
-D) Se permite al ser humano más virtuoso a imponer cierto valor a los bienes y servicios
-Respuesta Correcta: A
-
-3. La concepción de Aristóteles sobre la justicia consiste en dar a cada uno lo que se merece, bajo esta definición, ¿qué hemos de identificar para determinar quién merece qué?
-A) Los méritos realizados en sociedad
-B) El compañerismo y respeto al prójimo
-C) Virtudes dignas de honores
-D) Habilidades políticas e intelectuales
-Respuesta Correcta: C
-
-4. ¿Por qué, según Michael Sandel en "Hacer lo que es debido", el aumento del precio de las bolsas de hielo a diez dólares en una gasolinera de Orlando después del huracán Charley generó controversia entre los economistas y el público?
-A) Porque se consideraba una medida necesaria para evitar la escasez de hielo en la región afectada.
-B) Porque reflejaba una práctica comúnmente aceptada en mercados de libre competencia durante emergencias.
-C) Porque algunos lo vieron como una explotación de las necesidades básicas de las personas en situaciones de vulnerabilidad.
-D) Porque el aumento del precio se utilizó para subsidiar otros productos más demandados en ese momento.
-Respuesta Correcta: C
-
-5. ¿Qué acción, según Sandel en "Hacer lo que es debido", tomó el fiscal general de Florida en respuesta a los precios inflados después del huracán?
-A) Incrementó los precios máximos permitidos
-B) No tomó ninguna acción
-C) Impuso multas y ordenó devoluciones a los clientes
-D) Permitió que los precios siguieran subiendo
-Respuesta Correcta: C
-
-6. En el texto de Sandel, la metáfora del tsunami se relaciona ampliamente con el alcance concerniente a:
-A) Fracaso, éxito y justicia
-B) Éxito, justicia, moralidad
-C) Fracaso, éxito y moralidad
-D) Éxito, moralidad e injusticia
-Respuesta Correcta: A
-
-7. Según Sandel (2009) ¿Cuál es la razón principal que dan los economistas del libre mercado para justificar precios altos después de un desastre natural?
-A) Ajustan la oferta y la demanda de bienes limitados.
-B) Aumentan la competencia entre proveedores.
-C) Garantizan que solo los más ricos puedan comprar.
-D) Ayudan al gobierno a recaudar más impuestos.
-Respuesta Correcta: A
-
-8. ¿Qué argumento, según Sandel, utilizan los defensores del libre mercado para justificar los precios elevados tras desastres naturales?
-A) Se promueve la justicia social
-B) Se incentiva la distribución rápida de bienes necesarios
-C) Se garantiza la igualdad de acceso a los recursos
-D) Se establece un precio justo basado en la tradición
-Respuesta Correcta: B
-
-9. Para Sandel existen tres maneras de enfocar la justicia, ¿cuáles son estas?
-A) Diversificar utilidades, Maximizar el bienestar, Libertad individual
-B) Diversificar utilidades, Maximizar el bienestar, Jerarquía
-C) Diversificar utilidades, Libertad individual, Virtud
-D) Maximizar el bienestar, Libertad individual, Virtud
-Respuesta Correcta: D
-
-10. Según el texto de Sandel, ¿qué argumentos utilizó el Pentágono con el fin de justificar las restricciones para otorgar el Corazón Púrpura?
-A) Solo que las dolencias psicológicas son más difíciles de diagnosticar.
-B) Que las dolencias psicológicas son difíciles de diagnosticar y que el estrés postraumático no es causado intencionalmente por el enemigo.
-C) Que sin derramamiento de sangre no hay mérito visible.
-D) Que si se otorgaba a demasiados perdía su sentido.
-Respuesta Correcta: B
-
-11. En el texto de Sandel vemos que "La codicia es un vicio (...) No es que ya sea un vicio personal; es que..." (2009)
-A) "... choca con la virtud cívica"
-B) "... desencadena egoísmo y desigualdad"
-C) "... choca con la libertad del otro"
-D) "... crea monopolios"
-Respuesta Correcta: A
-
-12. En el caso del huracán Charley ¿Con cuál manera de ver la justicia relaciona Sandel la indignación pública frente a los precios excesivamente altos?
-A) Incrementar el bienestar.
-B) Promover la virtud.
-C) Respetar la libertad.
-D) Garantizar la igualdad.
-Respuesta Correcta: B
-
-13. Sandel comenta que existe un argumento común a favor de los mercados sin restricciones basado en dos aseveraciones, ¿cuáles son estas aseveraciones?
-A) Promover la igualdad económica y el derecho a voto
-B) Respetar la libertad política y eficiencia económica
-C) Fomentar la competencia y la libre expresión
-D) Maximizar el bienestar común y respetar la libertad individual
-Respuesta Correcta: D
-
-14. En el caso del huracán Charley ¿Cuál de los siguientes argumentos expuestos en el texto es ver la justicia como "promover la virtud", según Sandel?
-A) Demonizar a comerciantes y proveedores no acelerará la recuperación de Florida.
-B) Un mayor precio de bienes esenciales incentiva a proveedores a traerlo en mayores cantidades.
-C) Comprar bienes esenciales a precios desaforados tras una emergencia no es un intercambio verdaderamente libre.
-D) No debe permitirse que los vendedores de bienes esenciales actúen codiciosamente.
-Respuesta Correcta: D
-
-15. Acorde "Hacer lo que es debido" (Sandel, 2009), los filósofos políticos modernos afirman que una sociedad justa...
-A) "... respeta los deseos de la mayoría para establecer las leyes que rigen nuestra sociedad"
-B) "... se atropellan aquellos deseos egoístas que no permiten a la sociedad vivir en armonía"
-C) "... se reprime el pensamiento utilitarista de todos aquellos no virtuosos en la sociedad"
-D) "... respeta la libertad de cada uno de escoger su propia concepción de la vida buena"
-Respuesta Correcta: D
-
-16. Según Sandel, los filósofos políticos modernos piensan que:
-A) Los principios de la justicia no deben fundamentarse en concepciones de la virtud.
-B) Las teorías de Aristóteles estaban siempre en lo correcto.
-C) La libertad es irrelevante para determinar lo que es justo.
-D) La sociedad debería dedicarse solamente a maximizar el bienestar general.
-Respuesta Correcta: A
-
-17. Sandel indaga sobre dos explicaciones para la indignación pública que se describe en el texto respecto al pago de primas millonarias a ejecutivos de AIG ¿Cuál razón cree él que es la que mejor explica la indignación?
-A) AIG había sido rescatada con fondos públicos destinados a obras públicas.
-B) Los contribuyentes sentían que se estaban recompensando virtudes malas, particularmente la codicia.
-C) Los fondos públicos que se usaron para rescatar a la empresa, y por extensión la fuente de las primas, están esencialmente premiando el fracaso.
-D) El congreso había prometido prudencia y el público se sintió engañado.
-Respuesta Correcta: C
-
-18. En el texto de Sandel, la discusión respecto al Corazón Púrpura surge a raíz de que:
-A) El Pentágono decidió otorgarlo sólo a quienes hayan sufrido heridas físicas.
-B) El ejército le otorgó el reconocimiento a demasiados veteranos.
-C) Se decidió que no se lo darían a veteranos que no hayan estado en Irak.
-D) Premia virtudes con las que muchos están en desacuerdo.
-Respuesta Correcta: A
-
-19. Para Sandel, la discusión sobre el Corazón Púrpura ilustra la teoría de la justicia de:
-A) Aristóteles.
-B) Platón.
-C) Kant.
-D) Rawls.
-Respuesta Correcta: A
-
-20. Según el texto de Sandel, ¿cómo justifican los economistas del libre mercado que los precios elevados durante una emergencia puedan contribuir al bienestar general?
-A) Los precios elevados desalientan la demanda excesiva.
-B) Los precios elevados garantizan que sólo los consumidores con mayor capacidad de pago accedan a los bienes.
-C) Los precios elevados incentivan a los productores a aumentar la oferta, atrayendo recursos adicionales hacia las áreas afectadas.
-D) Los precios elevados reducen la competencia entre los proveedores locales.
-Respuesta Correcta: C
-
-21. Según el economista Thomas Sowell, citado por Sandel en el capítulo 1 de "Justicia", ¿qué término consideraba carente de sentido desde el punto de vista económico?
-A) Oferta y demanda
-B) Precio justo
-C) Precio abusivo
-D) Libertad de mercado
-Respuesta Correcta: C
-
-22. Según Sandel, ¿qué ley prohíbe las subidas especulativas de precios en Florida?
-A) La ley del libre comercio
-B) La ley de protección del consumidor
-C) La ley de justicia económica
-D) La ley contra el abuso de precios
-Respuesta Correcta: D
-
-23. El escrito de Sandel comienza con un caso hipotético el cual es:
-A) Un choque de ideologías políticas para dirigir el país.
-B) Un accidente en tren y las posibles decisiones a escoger.
-C) El estado discute sobre cómo distribuir los recursos equitativamente.
-D) Un robo de los recursos financieros de los más pobres.
-Respuesta Correcta: B
-
-24. En el texto de Sandel se menciona un hecho ocurrido durante la crisis financiera del 2008 para:
-A) Ilustrar que las discusiones morales respecto a la virtud pueden tener gran relevancia pública y no son siempre evitables.
-B) Mostrar que la "libertad" del libre mercado a veces termina necesitando de ayuda estatal.
-C) Ejemplificar lo que sucede cuando las personas sólo piensan en la justicia como maximizar el bienestar.
-D) Demostrar que el presidente y el parlamento estadounidenses tienen concepciones de la justicia muy distintas.
-Respuesta Correcta: A
-
-25. Según Sandel, el Corazón Púrpura es un reconocimiento al:
-A) Sacrificio.
-B) Valor.
-C) Patriotismo.
-D) Idealismo.
-Respuesta Correcta: A
-
-26. De acuerdo a la Declaración de la Internacional Socialista, el mundo vive una profunda transformación y el principal desafío es definir quién la dirigirá. ¿Cuál es la condición previa e indispensable para ampliar los derechos y libertades en todos los ámbitos de la sociedad?
-A) Un rápido crecimiento económico basado en la liberalización de los mercados.
-B) La existencia de un Estado fuerte que centralice todas las decisiones importantes.
-C) La democracia política.
-D) La abolición de la propiedad privada de los medios de producción.
-Respuesta Correcta: C
-
-27. De acuerdo al texto del SPD, la contradicción de la época es que la humanidad ha desarrollado un poder inmenso pero vive amenazada por él. ¿Cuál es la aspiración final del socialismo democrático?
-A) Volver a un orden social preindustrial.
-B) Crear un gobierno mundial autoritario.
-C) Acelerar el desarrollo tecnológico sin importar consecuencias.
-D) Crear una sociedad libre de necesidad y temor, de guerra y opresión.
-Respuesta Correcta: D
-
-28. De acuerdo al texto de Sen, ¿qué problema central presenta el "bienestarismo" según la crítica que Sen recoge de Rawls?
-A) Que es un sistema demasiado complejo.
-B) Que ignora la fuente u origen de las utilidades, como el placer obtenido de la discriminación.
-C) Que solo considera valiosos los placeres materiales.
-D) Que requiere un conocimiento perfecto de las preferencias.
-Respuesta Correcta: B
-
-29. Según Bernstein (1899), ¿por qué la revolución por la fuerza pierde sentido en ciertas condiciones?
-A) Porque las minorías privilegiadas siempre prevalecen.
-B) Porque no se puede derrocar a una nación entera.
-C) Porque la legislación elimina toda necesidad de cambio.
-D) Porque las clases trabajadoras rechazan toda forma de lucha.
-Respuesta Correcta: B
-
-30. En el texto de Hobsbawm ¿Qué simboliza la figura de Marx en el contexto contemporáneo según el texto?
-A) Una figura anticuada sin relevancia actual.
-B) Un símbolo de la revolución industrial.
-C) Un economista cuyo trabajo fue refutado por los postulados de la economía moderna.
-D) Un ícono para los movimientos de justicia social y económica.
-Respuesta Correcta: D
-
-31. Según Lenin, ¿cuándo podrá extinguirse por completo el Estado?
-A) Cuando el proletariado tome el poder a nivel mundial.
-B) Cuando se eliminen todas las formas de propiedad privada.
-C) Cuando se establezca una democracia directa y participativa.
-D) Cuando la sociedad ponga en práctica la regla: "de cada cual, según su capacidad; a cada cual, según sus necesidades".
-Respuesta Correcta: D
-
-32. De acuerdo al texto de Marx y Engels, se plantea que la burguesía da un carácter cosmopolita a la producción. ¿Qué relación establece el autor entre el desarrollo de la gran industria y la globalización?
-A) La gran industria retrasa la globalización.
-B) La globalización es independiente del desarrollo industrial.
-C) El desarrollo industrial depende de la protección de las fronteras.
-D) La industria necesita expandirse globalmente, creando una interdependencia universal entre naciones.
-Respuesta Correcta: D
-
-33. Según Lenin (1917), ¿Qué enfoque adopta Marx para analizar el desarrollo del comunismo?
-A) Construye utopías basadas en conjeturas vanas.
-B) Se basa exclusivamente en la experiencia de la Comuna.
-C) Aplica la teoría del desarrollo al capitalismo como un naturalista.
-D) Ignora el origen histórico del comunismo.
-Respuesta Correcta: C
-
-34. Según el texto de Hobsbawm ¿Cuál fue una de las principales críticas de Marx a la economía capitalista según el texto?
-A) La falta de oportunidades para el crecimiento personal.
-B) La tendencia a la automatización del trabajo.
-C) La explotación de la clase trabajadora.
-D) La falta de regulación gubernamental.
-Respuesta Correcta: C
-
-35. Según Bernstein, ¿hacia dónde se dirigía constantemente la acción política en el marxismo tradicional?
-A) Hacia la consecución de reformas legislativas.
-B) Hacia la colaboración con otros partidos.
-C) Hacia una convulsión revolucionaria.
-D) Hacia la expansión de la influencia sindical.
-Respuesta Correcta: C
-
-36. De acuerdo al texto de Marx y Engels, ¿cuál es la función del "gobierno del Estado moderno" según la perspectiva presentada?
-A) Actuar como un mediador imparcial.
-B) Administrar los negocios y asuntos comunes que benefician a toda la clase burguesa en su conjunto.
-C) Preservar los últimos vestigios del poder de la antigua aristocracia feudal.
-D) Limitar el poder económico de los grandes capitalistas.
-Respuesta Correcta: B
-
-37. Según Lenin, ¿Cómo funcionaría una democracia real en una sociedad comunista?
-A) Esta se volvería más inclusiva y más justa.
-B) Esta se volvería innecesaria y dejaría de existir por sí sola.
-C) Se limitaría a decisiones económicas y no políticas.
-D) Se concentraría exclusivamente en la clase trabajadora.
-Respuesta Correcta: B
-
-38. Según Hobsbawm, ¿qué ocurrió con el proyecto de una economía socialista en su forma del siglo XX?
-A) Se consolidó como el sistema económico dominante.
-B) Desapareció con el colapso de la URSS y no resurgirá.
-C) Se transformó en una economía mixta.
-D) Sigue siendo el objetivo principal de los partidos políticos.
-Respuesta Correcta: B
-
-39. ¿Qué tipo de enfoque social menciona Bernstein en lugar de la revolución violenta?
-A) Un enfoque evolutivo y reformista.
-B) Un enfoque de revolución progresiva.
-C) Un enfoque de surgimiento de las elites.
-D) Un enfoque anarquista liberal.
-Respuesta Correcta: A
-
-40. De acuerdo al texto de Sen, existen dos maneras de fundamentar una crítica a un principio moral. ¿Cuáles son estos dos tipos de crítica?
-A) La crítica histórica y la crítica sociológica.
-B) La crítica por las implicaciones (casos concretos) y la crítica por principios previos (consistencia general).
-C) La crítica económica y la crítica política.
-D) La crítica deductiva y la crítica inductiva.
-Respuesta Correcta: B
-
-41. De acuerdo a la Declaración de la Internacional Socialista, ¿cuál es la postura del documento respecto a la nacionalización de la economía?
-A) Es el único camino para alcanzar una verdadera sociedad socialista.
-B) Es el objetivo final del socialismo.
-C) Debe ser completamente descartada.
-D) Es una herramienta que puede ser necesaria en ciertas circunstancias, pero no es un remedio para todo.
-Respuesta Correcta: D
-
-42. De acuerdo al texto de Marx y Engels, ¿cuál es la principal consecuencia de la maquinaria y la división del trabajo para el proletario?
-A) La pérdida del carácter propio del trabajo, que se vuelve monótono y despojado de atractivo.
-B) Un aumento general de los salarios.
-C) Una mayor valoración de la habilidad artesanal.
-D) La reducción de la jornada laboral.
-Respuesta Correcta: A
-
-43. ¿Cómo describía Lenin la democracia dentro de una sociedad capitalista?
-A) Un sistema mediocre e inútil.
-B) Un mecanismo para la igualdad social.
-C) Una forma de gobierno equitativa.
-D) Un sistema para los ricos y las clases poseedoras.
-Respuesta Correcta: D
-
-44. Según Hobsbawm, ¿Cuál fue la postura de los partidos socialdemócratas que llegaron al gobierno después de la Primera Guerra Mundial?
-A) Intentaron implementar una economía socialista planificada.
-B) Se conformaron con políticas revisionistas, dejando que la economía capitalista operase para satisfacer las demandas del trabajo.
-C) Nacionalizaron completamente todas las industrias.
-D) Rechazaron cualquier forma de intervención estatal.
-Respuesta Correcta: B
-
-45. De acuerdo a la Declaración de la Internacional Socialista sobre la crisis ambiental, ¿Cuál es el enfoque propuesto?
-A) Un crecimiento económico acelerado.
-B) Un modelo de "decrecimiento".
-C) Un crecimiento ecológicamente equilibrado.
-D) La transferencia de industrias al Sur.
-Respuesta Correcta: C
-
-46. De acuerdo al texto del SPD, ¿Qué significa la reivindicación de la "co-gestión"?
-A) Que los trabajadores deben ser propietarios únicos.
-B) Que los sindicatos deben tener poder de veto.
-C) Que el Estado debe gestionar las industrias.
-D) Que el trabajador debe dejar de ser un "súbdito de la economía" para ser un "ciudadano de ella".
-Respuesta Correcta: D
-
-47. De acuerdo al texto de Sen, ¿en qué consiste la "igualdad de capacidad básica"?
-A) En asegurar la misma canasta de bienes.
-B) En garantizar el mismo nivel de felicidad.
-C) En enfocarse en que las personas sean capaces de hacer ciertas cosas básicas, como desplazarse o nutrirse.
-D) En promover el desarrollo de talentos innatos.
-Respuesta Correcta: C
-
-48. La afirmación de Bernstein de que la "dictadura del proletariado" podría convertirse en la "dictadura de los oradores y escritores del club" sugiere su preocupación por:
-A) La falta de líderes intelectuales.
-B) El riesgo de que una élite intelectual o política domine el movimiento por falta de una base organizativa autónoma.
-C) La necesidad de una revolución violenta.
-D) La inevitabilidad de la burocracia.
-Respuesta Correcta: B
-
-49. De acuerdo al texto de Marx y Engels, ¿cuál es la característica fundamental que distingue a la "época de la burguesía" de todas las anteriores?
-A) La eliminación completa de las clases sociales.
-B) La complejización de las jerarquías sociales.
-C) La simplificación del antagonismo social en dos grandes clases directamente enfrentadas.
-D) La conservación de las antiguas formas de opresión feudal.
-Respuesta Correcta: C
-
-50. De acuerdo al texto de Sen, sobre el ejemplo del minusválido con alta utilidad (feliz), ¿Qué demuestra este ejemplo?
-A) Que la felicidad es irrelevante para determinar la necesidad.
-B) Que existen necesidades que no se reflejan ni en la utilidad ni en la tenencia de bienes primarios.
-C) Que las creencias religiosas anulan desventajas físicas.
-D) Que solo las personas que se quejan merecen ayuda.
-Respuesta Correcta: B
-
-51. Según Hobsbawm, ¿Qué idea deberíamos rechazar sobre el marxismo?
-A) Que es un pensamiento obsoleto.
-B) Que existe una aguda diferencia entre un marxismo "correcto" y uno "incorrecto".
-C) Que todas las obras de Marx forman un corpus acabado.
-D) Que el marxismo puede interpretarse de una única manera.
-Respuesta Correcta: B
-
-52. De acuerdo al texto de Sen, ¿cómo afecta la diversidad humana a la validez de la teoría de Rawls?
-A) Favorece a la teoría de Rawls.
-B) Es irrelevante.
-C) Fortalece la teoría.
-D) Debilita la teoría, ya que una misma cantidad de bienes primarios puede generar capacidades muy distintas en personas diferentes.
-Respuesta Correcta: D
-
-53. En el texto de Lenin, ¿cómo llama Marx al Estado que debiese existir en el período de transición política entre el capitalismo y el comunismo?
-A) La dictadura revolucionaria del proletariado
-B) La democracia directa de las masas
-C) La socialdemocracia cooperativa
-D) Período socialista neoclásico
-Respuesta Correcta: A
-
-54. ¿Qué compara Bernstein en su análisis sobre las vías para lograr el cambio social?
-A) La reforma legislativa y negociación política
-B) La negociación política y el marxismo
-C) El marxismo y la democracia liberal
-D) La reforma legislativa y la revolución violenta
-Respuesta Correcta: D
-
-55. De acuerdo al texto de Marx y Engels, si la burguesía es descrita como "altamente revolucionaria", ¿a qué se debe principalmente este carácter?
-A) A su capacidad para preservar las tradiciones.
-B) A su necesidad incesante de transformar los instrumentos y las relaciones de producción.
-C) A su interés por crear alianzas políticas.
-D) A su rol en la promoción de un sistema económico equitativo.
-Respuesta Correcta: B
-
-56. Según el texto de Hobsbawm ¿Qué evento histórico se menciona como un reflejo del impacto de la obra de Marx?
-A) La Revolución Francesa.
-B) La Segunda Guerra Mundial.
-C) La Revolución Rusa de 1917.
-D) La caída del Muro de Berlín.
-Respuesta Correcta: C
-
-57. De acuerdo al texto de Sen, ¿cuál es una de las principales críticas que Sen formula contra el criterio "leximin"?
-A) Que es indiferente a la intensidad de las necesidades y a la magnitud de las ganancias o pérdidas de utilidad.
-B) Que siempre beneficia a las personas más ricas.
-C) Que requiere comparaciones interpersonales imposibles.
-D) Que es idéntico al utilitarismo.
-Respuesta Correcta: A
-
-58. Según el texto de Hobsbawm ¿Qué aspecto fundamental se destaca sobre la "planificación" en una economía socialista?
-A) Marx dejó instrucciones detalladas.
-B) Fue completamente ignorada.
-C) Fue introducida por socialdemócratas.
-D) La planificación está implícita en cualquier economía socialmente gestionada.
-Respuesta Correcta: D
-
-59. De acuerdo al texto de Marx y Engels, ¿por qué el texto considera al proletariado como la única clase "verdaderamente revolucionaria"?
-A) Porque los estamentos medios, como artesanos y campesinos, buscan restaurar un pasado preindustrial y son reaccionarios.
-B) Porque cuenta con el respaldo de las antiguas clases dominantes.
-C) Porque las demás clases se benefician de la industria.
-D) Porque el lumpemproletariado organiza la resistencia.
-Respuesta Correcta: A
-
-60. De acuerdo a la Declaración de la Internacional Socialista, ¿cuáles son los tres principios fundamentales e interdependientes que el documento establece?
-A) Crecimiento económico, estabilidad política y defensa nacional.
-B) Tradición, autoridad y orden social.
-C) Nacionalización, planificación central y partido único.
-D) Libertad, justicia y solidaridad.
-Respuesta Correcta: D
-
-61. De acuerdo al texto del SPD (Programa de Godesberg), ¿cuáles son las nuevas raíces filosóficas en las que se fundamenta el socialismo democrático?
-A) Exclusivamente en el análisis científico de la lucha de clases.
-B) En la ética cristiana, el humanismo y la filosofía clásica, respetando las decisiones de fe.
-C) En la necesidad de una dictadura del proletariado.
-D) En la abolición total del Estado.
-Respuesta Correcta: B
-
-62. De acuerdo al texto de Sen, ¿cómo trataría el "principio de la diferencia" de Rawls a un minusválido, en comparación con una persona sana?
-A) Le concedería más ingresos para compensar.
-B) Le concedería menos ingresos por menor contribución.
-C) No le concedería ni más ni menos ingresos por el solo hecho de su minusvalía.
-D) Le concedería más bienes primarios.
-Respuesta Correcta: C
-
-63. Según Bernstein ¿Qué domina en tiempos de paz cuando se usa la vía legislativa?
-A) La razón sobre la emoción.
-B) La emoción sobre la inteligencia.
-C) La fuerza sobre la negociación.
-D) La opresión sobre la libertad.
-Respuesta Correcta: A
-
-64. De acuerdo al texto de Marx y Engels, al afirmar que la burguesía "ha desgarrado sin piedad las abigarradas ligaduras feudales", ¿a qué tipo de transformación social se refiere?
-A) Al fortalecimiento de los lazos familiares.
-B) A la creación de un sistema de libertades garantizadas por la tradición.
-C) A la sustitución de las relaciones personales y jerárquicas por el frío interés económico y el "pago al contado".
-D) Al mantenimiento de las ilusiones religiosas.
-Respuesta Correcta: C
-
-65. De acuerdo al texto de Sen, ¿por qué Sen califica el enfoque de Rawls como "fetichista"?
-A) Porque Rawls le da importancia excesiva a la riqueza.
-B) Porque asume que las personas se mueven por deseo irracional.
-C) Porque sacraliza los derechos individuales.
-D) Porque se centra en los bienes en sí mismos, en lugar de lo que estos bienes hacen por los seres humanos.
-Respuesta Correcta: D
-
-66. De acuerdo al texto del SPD, ¿cuál es la postura del programa frente al comunismo?
-A) Lo considera un aliado táctico.
-B) Lo ve como una versión más radical pero legítima.
-C) Lo rechaza por haber falseado el pensamiento socialista y buscar la dictadura del partido.
-D) Propone un diálogo constructivo.
-Respuesta Correcta: C
-
-67. De acuerdo al texto de Sen, ¿cuál es la crítica fundamental de Sen a la "igualdad utilitarista"?
-A) Que al enfocarse solo en la utilidad marginal, ignora la distribución general del bienestar entre las personas.
-B) Que siempre busca la igualdad absoluta de ingresos.
-C) Que valora más la utilidad de las personas en desventaja.
-D) Que define la utilidad de manera abstracta.
-Respuesta Correcta: A
-
-68. Según Bernstein (1899), ¿en qué situación la vía revolucionaria es más efectiva?
-A) En la creación de estructuras económicas duraderas.
-B) En el establecimiento de reformas lentas.
-C) En la educación de las masas.
-D) En la eliminación de obstáculos impuestos por una minoría privilegiada.
-Respuesta Correcta: D
-
-69. En el texto de Hobsbawm, ¿qué se afirma acerca de los regímenes y partidos comunistas actuales?
-A) Que han abandonado el proyecto marxista leninista en la práctica.
-B) Que han logrado la hazaña de involucrar directamente a la clase trabajadora.
-C) Que han logrado niveles de desigualdad nunca antes vistos.
-D) Que representan fielmente el ideal de sociedad de Marx.
-Respuesta Correcta: A
-
-70. Según el texto de Hobsbwam, ¿cómo se ha utilizado la obra de Marx en el siglo XXI?
-A) Solo se estudia en contextos históricos.
-B) Se ha aplicado principalmente en contextos académicos.
-C) Ha sido la base para movimientos sociales contemporáneos.
-D) Se ha utilizado como ejemplo de fracaso ideológico.
-Respuesta Correcta: C
-
-71. Según Lenin, ¿a qué se refieren los sabios profesores y otros cuando hablan de utopías descabelladas de los bolcheviques?
-A) A la fase inicial o inferior del comunismo (socialismo).
-B) A la etapa o fase superior del comunismo.
-C) A las políticas económicas implementadas tras la revolución.
-D) A la necesidad de una revolución violenta.
-Respuesta Correcta: B
-
-72. De acuerdo al texto de Marx y Engels, ¿por qué el texto compara a la sociedad burguesa con "un mago que ya no es capaz de dominar las potencias infernales que ha desencadenado"?
-A) Porque la burguesía genera fuerzas productivas tan inmensas que se vuelven incontrolables para sus propias relaciones de propiedad.
-B) Porque los avances tecnológicos superan la comprensión de la clase dominante.
-C) Porque el proletariado utiliza métodos de lucha imprevisibles.
-D) Porque el Estado moderno se vuelve en contra de sus propios intereses.
-Respuesta Correcta: A
-
-73. De acuerdo a la Declaración de la Internacional Socialista, sobre la situación del comunismo a nivel mundial (1989), ¿Cuál es la valoración que se hace?
-A) Sigue siendo una alternativa viable.
-B) Ha perdido el atractivo que tuvo en el pasado debido a sus crímenes y problemas económicos.
-C) Debe fusionarse con el socialismo democrático.
-D) Es un sistema económicamente superior.
-Respuesta Correcta: B
-
-74. De acuerdo al texto del SPD (Programa de Godesberg), ¿Cuál es la postura frente a la propiedad privada?
-A) Tiene derecho a la protección y al estímulo siempre que no impida un orden social justo.
-B) Se debe eliminar por completo.
-C) Se permite únicamente para las pequeñas empresas.
-D) Es un mal necesario que debe ser tolerado temporalmente.
-Respuesta Correcta: A
-
-75. De acuerdo a la Declaración de la Internacional Socialista, sobre la revolución tecnológica: ¿Cuál es la postura del documento frente a las nuevas tecnologías?
-A) Deben ser controladas socialmente para aprovechar sus oportunidades y minimizar sus riesgos.
-B) Deben ser desarrolladas libremente por el mercado.
-C) Deben ser rechazadas por completo.
-D) Deben ser propiedad exclusiva del Estado.
-Respuesta Correcta: A
-
-76. Según Lenin (1917), ¿Qué caracteriza al período de transición del capitalismo al comunismo según Marx?
-A) La eliminación inmediata del Estado.
-B) Una democracia completa sin restricciones.
-C) La ausencia de cualquier forma de represión.
-D) La dictadura revolucionaria del proletariado como Estado transitorio.
-Respuesta Correcta: D
-
-77. Según Lenin (1917), ¿cómo describe el autor la democracia en el contexto de una sociedad capitalista?
-A) Como una democracia restringida, solo para los ricos.
-B) Como una democracia completa e inclusiva.
-C) Como una inexistente.
-D) Como un sistema que beneficia a los pobres.
-Respuesta Correcta: A
-
-78. ¿Cual es la principal crítica de Bernstein al marxismo clásico?
-A) La contradicción entre la inmadurez del proletariado y el actuar como si estuviesen listo para la revolución.
-B) La falta de cohesión de los integrantes.
-C) Su enfoque en la revolución violenta.
-D) La contradicción en los ideales políticos.
-Respuesta Correcta: A
-
-79. De acuerdo a la Declaración de la Internacional Socialista, sobre la desigualdad entre sexos: ¿Cómo caracteriza el documento la opresión basada en el género?
-A) Como la forma de opresión más generalizada en la historia humana.
-B) Como un problema secundario.
-C) Como un fenómeno exclusivo del Norte.
-D) Como un asunto cultural fuera de la política.
-Respuesta Correcta: A
-
-80. Según Hobsbawm, ¿Cuál es el "talón de Aquiles" del capitalismo?
-A) Su incapacidad para generar suficiente riqueza.
-B) El conflicto entre la necesidad de controlar el impacto económico en la biosfera y el imperativo de máximo crecimiento en busca de beneficios.
-C) Su dependencia excesiva de la intervención estatal.
-D) La falta de innovación tecnológica.
-Respuesta Correcta: B
-
-81. Según La Anarquía, ¿cuál es el propósito principal del autor al argumentar sobre la abolición de la autoridad en la sociedad?
-A) Establecer que la vida social depende de una fuerza trascendente que emana del cuerpo gubernamental.
-B) Proponer la eliminación del monopolio de la fuerza y la influencia para la expansión de las fuerzas sociales.
-C) Instaurar la idea de que la destrucción de toda influencia mutua llevará a la independencia individual absoluta.
-D) Respaldar un gobierno conformado por dictadores electos que puedan guiar a la sociedad hacia el socialismo.
-Respuesta Correcta: B
-
-82. Según el texto de Luxemburgo, ¿qué papel deben jugar la violencia y el armamento para la revolución?
-A) Contrarrestar la violencia de la contrarrevolución y proteger a las masas.
-B) Ninguno en específico, la revolución debe ser exclusivamente pacífica.
-C) El papel exclusivo de la diplomacia y los parlamentos.
-D) Su función es sustituir la organización de los consejos de trabajadores.
-Respuesta Correcta: A
-
-83. Según el texto de Mussolini, ¿qué lugar asigna el Estado fascista a la economía?
-A) Se atribuye el dominio económico mediante instituciones corporativas.
-B) La coordina solo en periodos de guerra.
-C) La deja en manos de gremios privados autónomos.
-D) La regula a través de bancos centrales independientes.
-Respuesta Correcta: A
-
-84. Según el texto de Schmitt, ¿qué actitud se critica en los enemigos de Alemania y en quienes aceptan sus exigencias?
-A) La disposición a someterse nuevamente a los ideales liberales extranjeros en lugar de defender la soberanía alemana.
-B) La tendencia a buscar alianzas militares para fortalecer al Estado alemán.
-C) La incapacidad de reconocer los errores del liberalismo y adoptar valores democráticos.
-D) El exceso de confianza en la fuerza militar alemana para resolver los conflictos.
-Respuesta Correcta: A
-
-85. Acorde el escrito de Lenin, ¿qué caracteriza al tercer período de la socialdemocracia rusa?
-A) La dispersión teórica, el practicismo mezquino y la pérdida del espíritu revolucionario.
-B) La expansión interracial del proletariado y la empatía con el sector obrero.
-C) El fortalecimiento del marxismo militante y la cohesión social del partido revolucionario.
-D) El auge de la crítica populista de la mano del retorno de las ideas de libertad del pueblo.
-Respuesta Correcta: A
-
-86. Según el texto de Mi lucha (1924), ¿cuál es la analogía final que usa el autor para explicar la relación entre Estado y raza?
-A) El Estado como creador y la raza como resultado.
-B) El Estado como recipiente y la raza como su contenido.
-C) La raza como instrumento del Estado.
-D) El Estado como un organismo independiente de su pueblo.
-Respuesta Correcta: B
-
-87. De acuerdo al texto de Michels, ¿Cómo se relaciona la división del trabajo (especialización) dentro de un partido con el desarrollo de la oligarquía?
-A) La especialización implica autoridad, equiparando la necesidad de líderes expertos con la de especialistas, transformando así la democracia en una forma de gobierno por los mejores (aristocracia).
-B) La especialización crea líderes que, por definición, son incapaces de ejercer autoridad sobre la masa.
-C) La división del trabajo evita la acumulación de poder en pocas manos, previniendo los abusos.
-D) La especialización garantiza que los líderes sigan siendo meros representantes y servidores del partido, en lugar de amos.
-Respuesta Correcta: A
-
-88. ¿Cuál es la advertencia que George Sorel formula al proletariado revolucionario, utilizando como analogía histórica la experiencia de los germanos que conquistaron el Imperio Romano?
-A) Que deben evitar convertirse en utopistas al adoptar modelos sociales idealizados.
-B) Que deben concentrar todo el poder en la figura de un líder fuerte.
-C) Que no deben avergonzarse de su "barbarie" y ponerse a estudiar con los retóricos de la decadencia latina.
-D) Que la guerra social debe llevarse a cabo de forma hipócrita y con atenuación judicial para evitar abominaciones.
-Respuesta Correcta: C
-
-89. Según el texto de Marinetti, el ataque del Futurismo contra la literatura anterior y las artes tradicionales se basa en:
-A) La dicotomía entre la veneración por la inmovilidad del pensamiento (el éxtasis y el sueño) y la glorificación del movimiento agresivo y el insomnio febriciente.
-B) La tensión entre el deseo de expresar enteramente un sueño del artista y la frustración ante las barreras infranqueables de una expresión insuficiente.
-C) El antagonismo entre el ideal místico, que ha sido finalmente sobrepujado, y el nacimiento del Centauro junto al vuelo de los primeros Ángeles.
-D) La diferencia entre la sabiduría, considerada una ganga inútil y perjudicial, y el lodo fortificante que recuerda las mamas negras de la nodriza sudanesa.
-Respuesta Correcta: A
-
-90. Según Michels, la organización es el medio indispensable para la lucha política de las masas. ¿Cuál es el principio fundamental en el que se basa la necesidad de la organización?
-A) En el principio del menor esfuerzo, buscando la máxima economía posible de energía, siendo el arma de los débiles contra los fuertes.
-B) En la obligación moral de los débiles de unirse para alcanzar la felicidad.
-C) En el deseo de los líderes de concentrar el poder en un número restringido de personas.
-D) En la necesidad de los partidos de disfrazar sus deseos puramente intelectuales como la voluntad de la masa.
-Respuesta Correcta: A
-
-91. Para Malatesta, "abolir la autoridad" significa principalmente:
-A) Abolir el monopolio de la fuerza y de la influencia sobre la sociedad.
-B) Sustituir al Estado por una élite ilustrada.
-C) Disolver toda forma de organización y coordinación social.
-D) Reemplazar la propiedad privada por propiedad estatal.
-Respuesta Correcta: A
-
-92. ¿Cuál es la idea central que presenta Rosa Luxemburgo en su texto?
-A) La necesidad de una revolución socialista mundial encabezada por las masas trabajadoras.
-B) La reforma gradual del sistema capitalista mediante parlamentos.
-C) La defensa de la monarquía como garantía de orden y paz.
-D) La conveniencia de que una minoría ilustrada dirija la transformación social.
-Respuesta Correcta: A
-
-93. Según el texto de Schmitt, ¿cuál es la crítica que se hace a la democracia liberal?
-A) Que promueve un poder judicial independiente que fortalece al Estado.
-B) Que restringe la acción de los líderes al someterlos a la ley.
-C) Que prioriza la moral cristiana por sobre la justicia civil.
-D) Que confunde la función del juez con la del líder, debilitando la autoridad del Estado y del derecho.
-Respuesta Correcta: D
-
-94. Dentro del extracto de Mi lucha (1924), ¿Qué propone el autor como base del proceso de "nacionalización" de un pueblo?
-A) La educación en el respeto y conocimiento de la patria.
-B) La creación de instituciones democráticas.
-C) La expansión territorial y militar.
-D) El reemplazo del idioma nacional por uno universal.
-Respuesta Correcta: A
-
-95. ¿Cuál es la razón principal por la que Michels considera el estudio de los partidos democráticos y revolucionarios (como el socialista y laborista) el mejor campo de observación para entender la tendencia oligárquica?
-A) Porque estos partidos representan la negación de la tendencia oligárquica, por lo que su aparición en ellos es una prueba terminante de la existencia de tendencias oligárquicas inmanentes en toda organización humana.
-B) Porque estos partidos tienen un origen y programa que abiertamente defienden la oligarquía.
-C) Porque estos partidos, al nacer como oposición, revelan mejor sus verdaderas intenciones.
-D) Porque en los partidos conservadores la tendencia es demasiado sutil y difícil de observar.
-Respuesta Correcta: A
-
-96. ¿Cuál es la postura de George Sorel con respecto al rol de los "profesionales burgueses de la inteligencia" en la liberación del proletariado?
-A) El proletariado puede liberarse sin necesidad de recurrir a las directivas de los profesionales burgueses de la inteligencia, y el papel de estos últimos debe limitarse a negar el pensamiento burgués.
-B) El proletariado necesita las directivas de los intelectuales burgueses para que la lucha tenga una base teórica sólida.
-C) Los intelectuales deben ejercer una influencia directa en la formación revolucionaria del proletariado.
-D) Los intelectuales burgueses están llamados a ocupar los puestos principales en la democracia después de que el proletariado derribe el régimen.
-Respuesta Correcta: A
-
-97. En el Futurismo de Marinetti, ¿cuál es la idea principal de la filosofía de El Futurismo presentada?
-A) La urgente necesidad de una purga estética y social que elimine la gangrena de la herencia clásica y el inmovilismo de la reflexión profunda.
-B) La demostración de que el esplendor del mundo se ha enriquecido con la velocidad, la cual supera toda forma de belleza estatuaria y clásica.
-C) El imperativo de glorificar la acción agresiva y la máquina moderna, repudiando todo vestigio del pasado como signo de cobardía.
-D) La exaltación del hombre que domina el volante, usando su coraje y temeridad para enfrentar la muerte y el absurdo de lo desconocido.
-Respuesta Correcta: C
-
-98. Según el texto de Schmitt, ¿qué implicó el ascenso del Führer al poder en 1933?
-A) El inicio de un nuevo régimen que reemplazó completamente el sistema de Weimar.
-B) La restauración del antiguo imperio alemán bajo las leyes tradicionales.
-C) Una reforma limitada a la administración pública sin alterar el derecho existente.
-D) La simple formación de un nuevo gobierno dentro del mismo sistema político.
-Respuesta Correcta: A
-
-99. Según el texto de Malatesta, ¿cuál es el principal prejuicio que existe sobre el gobierno?
-A) Que es una fuerza que añade capacidades al individuo.
-B) Que es un mal necesario para evitar el caos absoluto.
-C) Que representa la voluntad colectiva de la sociedad.
-D) Que su única función es proteger a los ricos y poderosos.
-Respuesta Correcta: A
-
-100. Según George Sorel ¿Cuál es la distinción fundamental entre los mitos y las utopías, en el contexto de los movimientos sociales?
-A) Los mitos son el producto de un trabajo intelectual de teóricos, mientras que las utopías son expresiones de voluntad.
-B) Los mitos son construcciones que dirigen los espíritus hacia reformas parceladas, mientras que las utopías conducen a prepararse para un combate que destruya lo existente.
-C) Los mitos son concepciones tomadas en conjunto como fuerzas históricas y expresiones de voluntades, mientras que las utopías buscan establecer un modelo al cual comparar las sociedades existentes.
-D) Los mitos pueden discutirse y refutarse como estructuras sociales, mientras que las utopías se identifican con las convicciones de un grupo y no pueden ser refutadas.
-Respuesta Correcta: C
-
-101. El autor de Mi lucha (1924) considera que su paso por la pobreza le permitió:
-A) Desarrollar empatía hacia los burgueses.
-B) Forjar una voluntad resistente y una visión social.
-C) Perder el interés por su nación.
-D) Alejarse de la realidad del pueblo.
-Respuesta Correcta: B
-
-102. Según La Anarquía, ¿cómo se relacionan los argumentos de Malatesta y Bakunin respecto a la influencia y la abolición de la autoridad?
-A) Definiendo la influencia mutua y la autoridad como fuerzas igualmente perjudiciales para la verdadera libertad individual.
-B) Estableciendo que la dependencia mutua es natural y vital, mientras que la autoridad es una influencia artificial y legal.
-C) Argumentando que el gobierno solo es un monopolio si se le excluye a los individuos más inteligentes y capaces de la sociedad.
-D) Sosteniendo que la vida social requiere la destrucción absoluta de todo vínculo social para evitar la conformación de poderes.
-Respuesta Correcta: B
-
-103. ¿Qué actitud declara Mussolini respecto a las alianzas, especialmente con Alemania?
-A) Que Italia seguirá a su aliado (Alemania) "hasta el final", por lealtad según la "moral fascista".
-B) Neutralidad total y rechazo a cualquier alianza militar.
-C) Que Italia sólo actuará independientemente y jamás con aliados.
-D) Que Italia no tiene obligación moral con sus aliados y actuará según conveniencia.
-Respuesta Correcta: A
-
-104. Según el texto de Schmitt, ¿por qué el Führer asume el papel de juez supremo?
-A) Porque los tribunales civiles eran demasiado lentos para castigar la traición.
-B) Porque solo él, como líder del movimiento y del partido, puede ejercer la justicia en nombre de la unidad del pueblo.
-C) Porque el Estado liberal le otorgó autoridad legal sobre el sistema judicial.
-D) Porque el ejército alemán le delegó el poder de sancionar a sus subordinados.
-Respuesta Correcta: B
-
-105. Para Lenin, la moral comunista se diferencia de la burguesa porque:
-A) Se basa en principios universales y espirituales.
-B) Se subordina a los intereses de la lucha de clases del proletariado.
-C) Defiende los valores tradicionales de la familia y la propiedad.
-D) Busca conciliar los intereses del capital y del trabajo.
-Respuesta Correcta: B
-
-106. ¿Qué objetivo debe tener, según el autor de Mi lucha (1924), un nuevo movimiento ideológico?
-A) Clarificar y unificar la concepción del Estado.
-B) Expandir la religión como base política.
-C) Suprimir los sindicatos existentes.
-D) Rechazar toda forma de organización estatal.
-Respuesta Correcta: A
-
-107. Según el texto de Michels, en el contexto del sistema representativo, ¿qué significa realmente "representar" a una masa heterogénea en la vida política moderna, cada vez más compleja?
-A) Que los deseos puramente intelectuales del representante son aceptados como la voluntad de la masa, lo cual es cada vez más absurdo.
-B) Asegurar que la autoridad delegada tenga siempre una duración breve.
-C) Que el líder es capaz de sintetizar todos los problemas nacidos de la diferenciación económica.
-D) Que la representación permanente es imposible debido a la resistencia de los representados.
-Respuesta Correcta: A
-
-108. Según Sorel, ¿cómo se distingue una "utopía" de un "mito" en relación con la refutación y la discusión intelectual?
-A) Un mito puede discutirse como cualquier estructura social, mientras que una utopía se identifica con las convicciones del grupo.
-B) La utopía puede discutirse y refutarse al compararla con la historia o las necesidades de la producción actual, mientras que un mito no puede ser refutado porque se identifica con las convicciones de un grupo.
-C) La utopía dirige a los espíritus hacia la destrucción de lo existente, y el mito conduce a reformas parceladas.
-D) El mito es el producto de un trabajo intelectual, y la utopía es una expresión de voluntad.
-Respuesta Correcta: B
-
-109. Según Malatesta, ¿cuál es el principal problema de la idea de una "dictadura de los mejores" para educar a las masas?
-A) Que los dictadores se ocuparían en defenderse y mantener su poder.
-B) Que los 'mejores' no estarían interesados en asumir el poder político.
-C) Que la mayoría siempre tiene la razón sobre cualquier minoría.
-D) Que es imposible identificar quiénes son verdaderamente 'los mejores'.
-Respuesta Correcta: A
-
-110. En el discurso de Mussolini, ¿qué mensaje directo se da al pueblo italiano?
-A) Mantenerse al margen y no participar en la guerra.
-B) Que la guerra es inevitable y por tanto deben emigrar masivamente.
-C) Un llamado a las armas: el pueblo debe movilizarse, "VENCER", para asegurar justicia y un largo período de paz para Italia.
-D) Que sólo las élites militares participarán; la población civil quedará exenta.
-Respuesta Correcta: C
-
-111. En el texto ¿Qué hacer?, Lenin critica a los dirigentes del tercer período porque:
-A) Despreciaban la teoría y justificaban su atraso con argumentos superficiales.
-B) Aplicaban con demasiado rigor las ideas teóricas del marxismo.
-C) Se concentraban exclusivamente en la formación universitaria del proletariado.
-D) Promueven una práctica sindical basada en la organización militar.
-Respuesta Correcta: A
-
-112. Adolf Hitler en "Mi lucha" (1924) atribuye al movimiento sindicalista un papel:
-A) Colaborador en la mejora de la salud social nacional.
-B) Antipatriótico por naturaleza.
-C) Opositor al Estado por razones ideológicas.
-D) Secundario en la estructura de la nación.
-Respuesta Correcta: A
-
-113. En la era de la democracia, ¿cuál es la función principal que Michels atribuye a las consideraciones morales o éticas en la vida pública?
-A) Determinar la voluntad nacional de manera objetiva y libre de prejuicios.
-B) Establecer un modelo social ideal que es imposible de alcanzar.
-C) Servir como un arma que cualquiera puede emplear para disfrazar los verdaderos fines, hablando y luchando en nombre del pueblo.
-D) Asegurar que el ideal democrático se mantenga a pesar de las condiciones económicas adversas.
-Respuesta Correcta: C
-
-114. Según Sorel, ¿cuál es la ventaja moral y "civilizadora" que aporta la apología de la violencia proletaria?
-A) Permite a los socialistas parlamentarios organizar la burocracia revolucionaria.
-B) Engendra los elementos de una nueva civilización propia de un pueblo de productores y elimina los sentimientos mezquinos de celos y venganza.
-C) Garantiza que el proletariado no sienta vergüenza de su barbarie, a diferencia de los germanos que conquistaron el imperio romano.
-D) Conduce directamente a la felicidad futura de la humanidad, objetivo principal de los creadores de utopías.
-Respuesta Correcta: B
-
-115. Según Marinetti, ¿cuál es la "única higiene del mundo"?
-A) El militarismo obligatorio, que se valora por su capacidad de disciplina y control social.
-B) El desprecio a la mujer, que se exige como una norma ética y una muestra de valentía.
-C) El gesto destructor, llevado a cabo por los anarquistas, admirados por su rebeldía.
-D) La guerra, que se glorifica como el único método de limpieza y renovación global.
-Respuesta Correcta: D
-
-116. ¿Qué "prejuicio" combate Malatesta sobre el gobierno?
-A) Que incrementa por sí mismo la suma de fuerzas de la sociedad.
-B) Que nace por contrato social libremente aceptado.
-C) Que es siempre más eficiente que la cooperación voluntaria.
-D) Que garantiza la igualdad material de resultados.
-Respuesta Correcta: A
-
-117. ¿Cómo "redefine" el fascismo la noción de democracia cuando no significa agrupar al pueblo al margen del Estado?
-A) Como una democracia deliberativa y pluralista.
-B) Como una democracia representativa federal.
-C) Como una democracia organizada, centralizada y autoritaria.
-D) Como una democracia directa sin partidos.
-Respuesta Correcta: C
-
-118. ¿Qué paradoja describe Michels sobre la forma y la sustancia de la vida partidaria moderna?
-A) La democracia presenta una forma aristocrática, mientras que la aristocracia tiene un contenido democrático.
-B) La forma externa siempre es oligárquica, mientras que el contenido es siempre subversivo.
-C) La sustancia del socialismo es oligárquica, pero su forma es puramente anarquista.
-D) La aristocracia se presenta con apariencia democrática, en tanto que la sustancia de la democracia se impregna de elementos aristocráticos.
-Respuesta Correcta: D
-
-119. ¿Cómo se describe la idea de huelga general según el texto de Sorel?
-A) Como un sistema de imágenes que debe ser analizado y descompuesto en sus elementos para ser entendido por el historiador.
-B) Como una utopía perfectamente limpia de toda mezcolanza utópica, fácil de ridiculizar por los socialistas que temen la revolución.
-C) Como una ruptura temporal de relaciones comerciales, similar al desacuerdo entre un tendero y su proveedor.
-D) Como un mito que es un fenómeno de guerra, cuya espera y preparación constituye la revolución social, semejante a una batalla napoleónica que suprimiría todo un régimen condenado.
-Respuesta Correcta: D
-
-120. Según Sorel, ¿cuál es el papel que debe desempeñar el grupo de intelectuales que él representa, a fin de ser útiles al proletariado revolucionario?
-A) Deben encargarse de organizar el trabajo para superar al capitalismo.
-B) Deben analizar y descomponer los mitos revolucionarios en sus elementos constituyentes.
-C) Deben ejercer una influencia directa en la formación revolucionaria del proletariado.
-D) Deben limitarse a negar el pensamiento burgués, poniendo al proletariado en guardia contra la invasión de ideas de la clase adversaria.
-Respuesta Correcta: D
-
-121. ¿Cuál es la idea central sobre la relación entre Estado y cultura establecida por Hitler en su escrito?
-A) El Estado es el creador de la cultura.
-B) La cultura depende de la raza, no del Estado.
-C) El Estado garantiza por sí mismo el progreso cultural.
-D) La cultura se impone al margen de la estructura social.
-Respuesta Correcta: B
-
-122. En el texto el capital internacional es llamado "Baal, a cuya garganta ensangrentada son lanzados millones...". ¿Qué función cumple esa metáfora?
-A) Denunciar al capitalismo como una fuerza voraz, de carácter sacrificial y homicida.
-B) Exaltar la figura de los capitalistas como salvadores.
-C) Presentar al capital como una deidad benevolente.
-D) Minimizar la responsabilidad del capital en la guerra.
-Respuesta Correcta: A
-
-123. ¿Cuál es el propósito de Marinetti en El Futurismo?
-A) Instigar la rebelión de la juventud contra el legado del pasado, exigiendo la inmediata demolición de museos y de todas las bibliotecas.
-B) Denunciar la cobardía moral y el oportunismo intelectual de la burguesía al proponer una urgente purificación social y un nuevo sentido del honor.
-C) Proclamar la abolición total de las instituciones históricas y artísticas para imponer la nueva ética del movimiento agresivo y febril.
-D) Establecer un programa artístico-político basado en la glorificación de la maquinaria, el peligro y la renovación violenta del espíritu humano.
-Respuesta Correcta: D
-
-124. Una vez que el principio de organización se establece en la democracia, ¿qué peligro inevitable trae consigo, según Michels?
-A) Es el manantial desde donde parten las corrientes conservadoras que riegan la llanura de la democracia, haciendo que la supremacía de las masas sea ilusoria.
-B) Permite que la clase trabajadora se vuelva demasiado fuerte, llevando a la anarquía individualista.
-C) Conjuga la desorganización de fuerzas que favorecen al adversario, pero a costa de perder la solidaridad.
-D) Obliga a las masas a someterse a la guía de sus líderes, pero estos líderes permanecen siempre como sus servidores.
-Respuesta Correcta: A
-
-125. Acorde el extracto de "Tareas de las Juventudes Comunistas", ¿qué debe reemplazar la "vieja escuela" burguesa según Lenin?
-A) Una enseñanza memorista pero políticamente leal al comunismo.
-B) La educación religiosa adaptada a los intereses del proletariado.
-C) Un sistema que promueva la disciplina consciente y la asimilación crítica del conocimiento.
-D) El conocimiento técnico desvinculado de la ideología política.
-Respuesta Correcta: C
-
-126. Hitler menciona diversos elementos simbólicos dentro de su libro Mi lucha, en base a ello, ¿qué elemento fue clave para mantener la identidad alemana en la "Marca del Este"?
-A) La política colonial del Reich.
-B) La vigilancia militar constante.
-C) El sentimiento alemán y la defensa del idioma.
-D) La expansión económica hacia Oriente.
-Respuesta Correcta: C
-
-127. Acorde el escrito de Hitler (1924), la falta de comprensión social de algunos patrones:
-A) Amenaza la cohesión nacional.
-B) Demuestra la necesidad de limitar la industria privada.
-C) Justifica la eliminación de los sindicatos.
-D) Mejora las condiciones de los trabajadores.
-Respuesta Correcta: A
-
-128. George Sorel señala que el socialismo "no ha sido casi más que una utopía" durante mucho tiempo. ¿Qué cambio, según los marxistas, transformó esta situación?
-A) El hecho de que el socialismo se convirtiera en una preparación de las masas empleadas por la gran industria, que buscan suprimir el Estado y la propiedad.
-B) La refutación de la economía política liberal, que era la mejor utopía que se podía citar.
-C) El abandono de la lucha de clases para centrarse únicamente en la organización del trabajo, dado que el capitalismo fracasó en dicha tarea.
-D) La incorporación de elementos utópicos para salvaguardar las refutaciones a las teorías liberales.
-Respuesta Correcta: A
-
-129. Según el texto de Schmitt, ¿qué distingue al Estado dirigido por un solo líder del Estado de derecho liberal?
-A) Que en el primero existen controles recíprocos entre los poderes del Estado.
-B) Que el poder del líder está limitado por la ley y la justicia.
-C) Que el líder concentra en sí mismo la autoridad suprema y define lo que es justo.
-D) Que las decisiones del gobierno deben ser aprobadas por el parlamento antes de aplicarse.
-Respuesta Correcta: C
-
-130. ¿Cómo se posiciona la Liga Espartaco frente a partidos socialdemócratas que aceptan acuerdos con la burguesía?
-A) La critica y rechaza compartir el poder con quienes traicionen los principios socialistas.
-B) Se muestra indiferente ante esas decisiones tácticas.
-C) La apoya porque cree en alianzas amplias.
-D) Propone una fusión inmediata con los partidos que acepten coaliciones.
-Respuesta Correcta: A
-
-131. Según Michels, en la vida de la nación, ¿en qué punto teórico se tocan la democracia y la aristocracia, dejando de ser una antítesis absoluta?
-A) Cuando la clase gobernante se limita a los líderes del partido.
-B) Donde los participantes en el poder alcanzan el 50 por ciento.
-C) Cuando la aristocracia abandona por completo su forma democrática.
-D) Cuando la oligarquía es negada por los propósitos subversivos del partido.
-Respuesta Correcta: B
-
-132. Según el texto de Schmitt, ¿cuál fue, a juicio del Führer, la causa de la caída del imperio de Bismarck?
-A) Porque fue derrotado militarmente por enemigos externos más poderosos.
-B) Porque su burocracia liberal careció del instinto y la firmeza para actuar con dureza contra los enemigos internos.
-C) Porque el pueblo alemán se opuso al "Estado de derecho" impuesto por el liberalismo.
-D) Porque las reformas económicas de Bismarck debilitaron la unidad del Estado.
-Respuesta Correcta: B
-
-133. Según el texto de Mussolini, ¿qué objeción central formula el fascismo a la democracia basada en el sufragio universal?
-A) Que impide la competencia entre élites técnicas.
-B) Que desconoce la "desigualdad fecunda" de los hombres.
-C) Que hace demasiado costosas las elecciones periódicas.
-D) Que privilegia a los territorios rurales sobre las ciudades.
-Respuesta Correcta: B
-
-134. Según el texto de Schmitt, ¿qué representa Adolfo Hitler para Alemania?
-A) Un político más dentro de la tradición liberal alemana.
-B) Un juez que actúa en nombre del derecho internacional para evitar nuevas guerras.
-C) Un líder que encarna las advertencias de la historia alemana y busca fundar un nuevo orden.
-D) Un militar que intenta restaurar el antiguo imperio de Bismarck.
-Respuesta Correcta: C
-
-135. Según Hegel, ¿por qué el filósofo no debe depender únicamente de los historiadores empíricos?
-A) Porque ignoran la religión.
-B) Porque no estudian los pueblos antiguos.
-C) Porque no consultan las fuentes correctas.
-D) Porque se limitan a los hechos sin comprender la razón que los guía.
-Respuesta Correcta: D
-
-136. Según el texto de Alexander Kojeve, ¿qué representa el Estado absoluto en la filosofía hegeliana?
-A) El reino terrenal donde se realiza el Reino de los Cielos cristiano
-B) La desaparición del individuo ante lo colectivo
-C) El triunfo del materialismo sobre el idealismo
-D) Una utopía irrealizable
-Respuesta Correcta: A
-
-137. Según el texto de Fukuyama, ¿qué es lo que desean realmente los grupos conservadores y funcionarios del partido que se oponen a Gorbachov?
-A) Restaurar la ortodoxia del marxismo-leninismo.
-B) Tradición, orden y autoridad.
-C) Adoptar las modalidades de arrendamientos.
-D) Seguir las bases del centralismo democrático.
-Respuesta Correcta: B
-
-138. Según el texto de Huntington, ¿Cuál es una de las manifestaciones de la decadencia moral en Occidente mencionadas en el texto?
-A) La priorización del ahorro sobre el consumo
-B) La decadencia familiar, incluyendo mayores tasas de divorcio
-C) El interés cada vez mayor por el estudio y la actividad intelectual
-D) La reafirmación del cristianismo en Europa
-Respuesta Correcta: B
-
-139. Según el texto de Samuel P. Huntington, ¿Qué plantea el autor como condición para la paz mundial?
-A) La comprensión y cooperación entre civilizaciones.
-B) La supremacía política de Occidente.
-C) La uniformidad cultural global.
-D) La imposición de un orden universal único.
-Respuesta Correcta: A
-
-140. Según Hegel, ¿qué elemento elimina la filosofía en su consideración de la historia?
-A) Lo racional.
-B) Lo religioso.
-C) Lo contingente o accidental.
-D) Lo político.
-Respuesta Correcta: C
-
-141. Según el texto de Alexander Kojeve, ¿qué representa Napoleón en la historia universal?
-A) El retorno del amo pagano
-B) El hombre que realiza el ideal de la Individualidad en el mundo real
-C) El símbolo del pecado de orgullo cristiano
-D) El fin del Estado absoluto
-Respuesta Correcta: B
-
-142. Según el texto de Fukuyama, ¿qué evento y fecha usó Hegel, según Kojève, para proclamar el fin de la historia?
-A) La derrota de la monarquía prusiana en 1806.
-B) El comienzo de la Primera Guerra Mundial en 1914.
-C) La caída del Muro de Berlín en la década de los 80.
-D) La Revolución Francesa de 1789.
-Respuesta Correcta: A
-
-143. Según el texto de Huntington, ¿en qué fase parece estar entrando Occidente al desarrollar su equivalente de un imperio universal, manifestado en un sistema complejo de cooperación (confederaciones, federaciones, etc.)?
-A) Invasión
-B) Decadencia
-C) Edad Dorada
-D) Gestación
-Respuesta Correcta: C
-
-144. Según el texto de Samuel P. Huntington, ¿Qué aspecto considera esencial para que una civilización exista?
-A) La existencia de ley y orden.
-B) La innovación tecnológica.
-C) El crecimiento económico.
-D) La expansión territorial.
-Respuesta Correcta: A
-
-145. Según el texto de Hegel, ¿Qué rige el curso de la historia universal?
-A) Las pasiones humanas.
-B) Una razón divina y absoluta.
-C) La voluntad de los gobernantes.
-D) La naturaleza y el azar.
-Respuesta Correcta: B
-
-146. Según el texto de Alexander Kojeve, en el cristianismo primitivo, la individualidad se presenta como:
-A) Divinación del hombre
-B) Encarnación de dios
-C) Negación del alma humana
-D) Materialización del espíritu
-Respuesta Correcta: D
-
-147. Según el texto de Fukuyama, ¿qué desafíos ideológicos sistemáticos al liberalismo se considera agotados o derrotados por la historia?
-A) El absolutismo y las formas de conciencia racial.
-B) La religión organizada y el chovinismo ruso.
-C) El marxismo-leninismo y el socialismo europeo.
-D) El desafío del fascismo y el comunismo.
-Respuesta Correcta: D
-
-148. Según el texto de Huntington, A pesar de sus características únicas, la evidencia histórica sugiere que la evolución de Occidente no se ha apartado significativamente de:
-A) La hegemonía militar absoluta en el mundo
-B) Las leyes evolutivas comunes a las civilizaciones a lo largo de la historia
-C) La adopción total de los ideales multiculturales
-D) El camino hacia el universalismo absoluto
-Respuesta Correcta: B
-
-149. Según Huntington, ¿qué valores comparten las principales religiones del mundo?
-A) Algunos principios éticos básicos comunes a toda la humanidad.
-B) Ningún valor en común, ya que todas se oponen entre sí.
-C) Solo valores relacionados con el desarrollo económico.
-D) Únicamente normas de obediencia a la autoridad.
-Respuesta Correcta: A
-
-150. Según el texto de Hegel, ¿por qué Hegel critica a los historiadores "de oficio" según el texto?
-A) Porque escriben sin fuentes confiables.
-B) Porque introducen juicios morales en lugar de análisis objetivos.
-C) Porque caen en apriorismos subjetivos, igual que los filósofos a los que critican.
-D) Porque no reconocen el papel de la providencia divina.
-Respuesta Correcta: C
-
-151. Según el texto de Alexander Kojeve, ¿por qué el esclavo cristiano no alcanza aún su plena libertad, según el pensamiento de Hegel?
-A) Continúa bajo la dependencia del amo humano
-B) No reconoce su propio valor humano y se somete a un Dios trascendente
-C) No participa en el trabajo ni en la lucha
-D) Rechaza la moral cristiana
-Respuesta Correcta: B
-
-152. Según el texto de Fukuyama, ¿cuáles son las dos características fundamentales definen al "estado homogéneo universal" según la interpretación de Kojève?
-A) Es militarmente fuerte y socialmente conservador.
-B) Es protector de la libertad y democrático.
-C) Es satisfecho de sí mismo y de voluntad débil.
-D) Es puramente ideal y no se manifiesta.
-Respuesta Correcta: B
-
-153. Según el texto de Huntington, ¿Cuáles son las dos fuerzas externas que demuestran que otras civilizaciones están vivas y amenazan, al menos potencialmente, a Occidente?
-A) El sistema bipolar y la guerra fría.
-B) El comunismo ruso y el fascismo germano.
-C) La decadencia interna y la desunión política.
-D) El resurgimiento islámico y el dinamismo económico de Asia
-Respuesta Correcta: D
-
-154. ¿Qué propone Huntington como vía constructiva en un mundo de múltiples civilizaciones?
-A) Aislar a cada civilización para evitar conflictos.
-B) Imponer los valores occidentales a las demás civilizaciones.
-C) Renunciar al universalismo y buscar atributos comunes entre culturas.
-D) Promover una cultura única y homogénea.
-Respuesta Correcta: C
-
-155. Según el texto de Hegel, ¿qué papel tiene el concepto o la razón en la historia?
-A) Es la actividad que da sentido y forma a los acontecimientos.
-B) Solo interpreta los hechos ya ocurridos.
-C) Es una fuerza secundaria frente a la naturaleza.
-D) Es una herramienta subjetiva de los filósofos.
-Respuesta Correcta: A
-
-156. Según el texto de Alexander Kojeve, recordando el pensamiento de Hegel, la historia se detiene cuando:
-A) Los hombres alcanza la inmortalidad espiritual
-B) Desaparece la oposición entre amo y esclavo
-C) Se instaura la teología cristiana universal
-D) El estado cae en decadencia
-Respuesta Correcta: B
-
-157. Según el texto de Fukuyama, ¿por qué la productividad laboral disminuye cuando se elevaba la tarifa de trabajo a campesinos tradicionales?
-A) Porque los campesinos valoraban más el ocio que su renta.
-B) Porque su conciencia estaba determinada por el modo de producción.
-C) Porque los campesinos temían al espíritu capitalista.
-D) Porque el incentivo de la utilidad era completamente irrelevante.
-Respuesta Correcta: A
-
-158. Según el texto de Samuel P. Huntington, ¿Cómo describe el autor las etapas de evolución de una civilización?
-A) Surge espontáneamente y nunca desaparece.
-B) Se mantiene siempre estable y moralmente superior.
-C) Evoluciona linealmente hacia un estado universal.
-D) Nace vigorosa, alcanza una edad dorada y luego decae.
-Respuesta Correcta: D
-
-159. Según el texto de Hegel, ¿qué diferencia esencial separa la historia "pragmática" de la filosofía de la historia?
-A) La historia pragmática se centra en los hechos, mientras que la filosofía los niega.
-B) La historia pragmática busca causas externas, mientras que la filosofía parte del concepto racional en sí.
-C) La filosofía de la historia intenta explicar los hechos desde la experiencia empírica.
-D) Ambas comparten el mismo método, pero difieren en el grado de detalle histórico
-Respuesta Correcta: B
-
-160. Según el texto de Alexander Kojeve, ¿qué representa el esclavo cristiano en el desarrollo de la idea de individualidad?
-A) La completa emancipación humana
-B) La sumisión al naturalismo pagano
-C) El descubrimiento inicial del valor absoluto del individuo
-D) La restauración del orden pagano
-Respuesta Correcta: C
-
-161. Según el texto de Fukuyama, ¿cuál es el concepto hegeliano central que Fukuyama utiliza para describir la naturaleza del cambio histórico?
-A) El historicismo que conduce al relativismo simple.
-B) La historia como un proceso dialéctico con final.
-C) La intencionalidad determinada por fuerzas materiales.
-D) El dominio y transformación del entorno natural.
-Respuesta Correcta: B
-
-162. Según el texto de Huntington, ¿Cuál es una característica distintiva de Occidente que lo diferencia de las demás civilizaciones?
-A) Su capacidad para evitar la fase de conflicto
-B) El inicio de los procesos de modernización e industrialización.
-C) La primacía de los valores asiáticos sobre los europeos
-D) La ausencia de una herencia cultural común
-Respuesta Correcta: B
-
-163. Según el texto de Samuel P. Huntington, ¿Qué diferencia principal observa el autor entre los valores de Singapur y los de Occidente?
-A) En Singapur se privilegia la colectividad; en Occidente, el individuo.
-B) En Occidente predomina el consenso; en Singapur, la contienda.
-C) En Singapur se rechaza la religión; en Occidente, se promueve.
-D) En Occidente se prioriza la familia; en Singapur, el trabajo.
-Respuesta Correcta: A
-
-164. Según el texto de G.W.F. Hegel, ¿Cuál es el propósito de la filosofía de la historia?
-A) Narrar los hechos de los pueblos antiguos.
-B) Buscar las causas económicas del progreso.
-C) Mostrar el desarrollo racional del espíritu universal.
-D) Analizar la influencia del azar en la historia.
-Respuesta Correcta: C
-
-165. Según Hegel, ¿qué fin debe buscarse en la historia universal?
-A) La felicidad de los individuos.
-B) El fin último del mundo, comprendido por la razón.
-C) La conservación de los pueblos.
-D) La explicación empírica de los hechos.
-Respuesta Correcta: B
-
-166. Según el texto de Alexander Kojeve, ¿qué transforma el saber de Hegel en "saber absoluto"?
-A) La interpretación mitológica del Cristianismo
-B) La revelación de la realidad de Napoleón como Dios manifestado en la historia
-C) La negación de la razón y exaltación de la fe
-D) La abolición del Estado napoleónico
-Respuesta Correcta: B
-
-167. Según el texto de Huntington, ¿Qué factor, en términos económicos, caracteriza a la fase de decadencia de una civilización, según el modelo de Quigley?
-A) La proliferación del comercio transatlántico
-B) La aplicación del excedente a fines no productivos, sino que satisfacen al ego y consumo
-C) La reducción de las barreras comerciales interiores
-D) La inversión del capital foráneo en innovación
-Respuesta Correcta: B
-
-168. Según el texto de Samuel P. Huntington, ¿Cuál es la advertencia final del texto respecto al futuro de la humanidad?
-A) Que el progreso material resolverá los conflictos morales.
-B) Que la globalización eliminará todas las diferencias culturales.
-C) Que la paz dependerá de la cooperación entre civilizaciones.
-D) Que Occidente dominará inevitablemente al resto del mundo.
-Respuesta Correcta: C
-
-169. Según el texto de Alexander Kojeve, en el pensamiento hegeliano, la individualidad se entiende como:
-A) La afirmación del individuo aislado frente al colectivo
-B) La síntesis de lo particular y lo universal
-C) La negación de lo Universal a favor de lo Particular
-D) El rechazo de todo valor absoluto
-Respuesta Correcta: B
-
-170. Según el texto de Fukuyama, ¿dónde ha triunfado el liberalismo de manera fundamental, aunque su victoria real sea incompleta en el mundo material?
-A) En la esfera de la conciencia y de las ideas.
-B) En el mundo real y material de las relaciones internacionales.
-C) En la esfera militar, acabando con la guerra fría.
-D) En el desarrollo de tecnologías de defensa avanzada.
-Respuesta Correcta: A
-
-171. Según el texto de Huntington, ¿Qué les sucede habitualmente a las sociedades que suponen que su historia ha terminado?
-A) Su historia está a punto de empezar a declinar.
-B) Se convierten en un imperio universal.
-C) Confirman su liderazgo global indefinidamente.
-D) Experimentan un renacimiento cultural inmediato
-Respuesta Correcta: A
-
-172. Según el texto de Samuel P. Huntington, ¿Qué significa el "universalismo" según el texto?
-A) La aceptación de todas las culturas sin jerarquías.
-B) La idea de que los valores de Occidente son válidos para todo el mundo.
-C) La creación de un gobierno mundial.
-D) La promoción de la diversidad interna en los países.
-Respuesta Correcta: B
-
-173. Según Hegel, ¿Qué actitud debe tener el filósofo frente a la historia?
-A) Considerarla desde la razón, buscando lo esencial.
-B) Analizarla empíricamente sin ideas previas.
-C) Describir los hechos sin interpretarlos.
-D) Emocionarse ante la grandeza de los imperios.
-Respuesta Correcta: A
-
-174. Según el texto de Fukuyama, ¿qué consecuencia ambivalente se espera en el período poshistórico tras el cese de la lucha ideológica?
-A) El reemplazo de la audacia por la resolución de problemas.
-B) El resurgimiento de estadistas heroicos y generales audaces.
-C) La creación de arte y filosofía centrados en el cálculo económico.
-D) El desarrollo de una nueva base ideológica vigorosa.
-Respuesta Correcta: A
-
-175. Según el texto de Huntington, ¿qué permite que una civilización crezca y se expanda según Quigley?
-A) La acumulación de excedentes para el consumo individual.
-B) Un «instrumento de expansión» que acumula excedentes y los invierte en innovaciones productivas.
-C) El predominio de la ética del ocio sobre la ética del trabajo.
-D) La inversión del índice de crecimiento
-Respuesta Correcta: B
-
-176. Según el texto de Samuel P. Huntington, ¿qué relación hay entre modernización y civilización?
-A) La modernización mejora lo material, pero no siempre lo moral.
-B) Son procesos idénticos que avanzan juntos.
-C) La modernización destruye las culturas tradicionales.
-D) La civilización es consecuencia directa de la tecnología.
-Respuesta Correcta: A
-
-177. Según el texto de Alexander Kojeve, bajo el pensamiento de Hegel ¿cuál es el origen y el fondo del Cristianismo?
-A) La revelación de Dios como entidad trascendente
-B) La idea de la Individualidad descubierta por el esclavo
-C) La victoria del Espíritu sobre la materia
-D) La moral de la compasión universal
-Respuesta Correcta: B
-
-178. Según el texto de Fukuyama, ¿qué proceso fundamental está en movimiento más allá de eventos contingentes o la guerra fría?
-A) El retorno al punto de origen del siglo veinte.
-B) El fin de la historia y la evolución ideológica.
-C) La culminación de un periodo específico de posguerra.
-D) Una nueva era de conflictos y violencia ideológica.
-Respuesta Correcta: B
-
-179. Según el texto de Huntington, ¿cómo describe Toynbee la percepción que tiene la gente de una civilización cuando aparece el Estado universal?
-A) Como la Tierra prometida, la meta de todos los esfuerzos humanos
-B) Como una península pequeña y sin trascendencia
-C) Como el principio de la invasión bárbara
-D) Como la justificación de Dios (Teodicea).
-Respuesta Correcta: A
-
-180. Según el texto de Samuel P. Huntington, ¿cuál es el peligro del multiculturalismo dentro de Estados Unidos?
-A) Que fomenta el nacionalismo extremo en la población estadounidense.
-B) Que amenaza la unidad cultural y la identidad occidental de Estados Unidos.
-C) Que promueve la exclusión de las minorías étnicas.
-D) Que incentiva el expansionismo cultural norteamericano.
-Respuesta Correcta: B
-
-181. Según el texto de Alexander Kojeve, ¿qué implica "suprimir la Religión y la Teología Cristianas"?
-A) Rechazar toda forma de espiritualidad
-B) Destruir el concepto de Individualidad
-C) Liberar al Hombre de los restos de la servidumbre teológica y pagana
-D) Sustituir la religión por el arte
-Respuesta Correcta: C
-
-182. Según el texto de Fukuyama, ¿cuál es el "error común" derivado de ignorar que la conciencia es la raíz del comportamiento económico?
-A) Negar el papel de los factores materialistas en la sociedad.
-B) Confundir la causa material con el efecto ideológico.
-C) Atribuir causas materiales a fenómenos de naturaleza ideal.
-D) Ver a la religión como una superestructura determinada.
-Respuesta Correcta: C
-
-183. Según el texto de Huntington, ¿Cuál de las siguientes es una de las siete fases de evolución de las civilizaciones históricas identificadas por Carroll Quigley?
-A) Estancamiento.
-B) Mezcla.
-C) Globalización.
-D) Consenso
-Respuesta Correcta: B
-
-184. Responda de acuerdo al texto Rerum Novarum, sobre la Cuestión Obrera de León XIII. ¿Qué razones da el Papa León XIII para rechazar ambos extremos (socialismo y liberalismo extremo)?
-A) Que ambos sistemas no consideran la riqueza material necesaria.
-B) Que ambos promueven la intervención exclusiva de la Iglesia en la economía.
-C) Que uno niega la propiedad privada y el otro abandona al trabajador a la explotación, de modo que ambos fallan en proteger la dignidad humana.
-D) Que ambos elevan la figura del obrero por encima de la familia.
-Respuesta Correcta: C
-
-185. En relación con el texto de Maritain sobre los derechos humanos, ¿Qué significa que los derechos humanos sean inalienables?
-A) Que no se pueden quitar ni renunciar a ellos.
-B) Que no se pueden juntar unos con otros.
-C) Que no existen unos más importantes que otros.
-D) Que no se puede garantizar legalmente.
-Respuesta Correcta: A
-
-186. Responda de acuerdo al texto de Toffler. ¿Qué simbolizaba, según Toffler, el signo de dólar en la novela más famosa de Ayn Rand?
-A) El libertarismo socio-tecnológico.
-B) Las cadenas del hombre trabajador.
-C) El libre comercio y una mente libre.
-D) La ruptura con la lógica soviética de su pasado.
-Respuesta Correcta: C
-
-187. Según la visión de Hayek sobre el surgimiento de las ideas y regímenes totalitarios en Europa, ¿qué tuvo en común Alemania con Italia y Rusia?
-A) Predominio de ideas liberalistas
-B) Prusianismo
-C) Nacionalismo
-D) Predominio de ideas socialistas
-Respuesta Correcta: D
-
-188. Según el texto "El uso del conocimiento en la sociedad" de F. Hayek, ¿cuál es el problema central que enfrenta toda economía?
-A) La falta de recursos naturales.
-B) La desigualdad social.
-C) La utilización del conocimiento disperso entre los individuos.
-D) El exceso de regulación estatal.
-Respuesta Correcta: C
-
-189. Según Murray en el texto de "La teoría del neoconservadurismo", una de las principales dificultades para definir el neoconservadurismo es que:
-A) Al estar ligada a los principios de la extrema derecha estadounidense, se evita dar una definición clara por tabú.
-B) No tiene un manifiesto ni principios claros compartidos por todos, por lo que hay distintas comprensiones de la doctrina.
-C) Se acepta a Leo Strauss como el máximo y único referente del neoconservadurismo.
-D) El neoconservadurismo es una doctrina que se contradice profundamente a sí misma.
-Respuesta Correcta: B
-
-190. Según el texto Rerum Novarum, sobre la Cuestión Obrera de León XIII. ¿Cuál es la razón principal por la que la solución socialista (abolir la propiedad privada) es perjudicial para el propio obrero?
-A) Porque los obreros no están educados en poseer bienes.
-B) Porque el Estado no tendría la capacidad de administrar eficientemente todos los bienes comunes.
-C) Porque promueve violencia y el odio entre clases.
-D) Porque le quita al obrero el derecho de disponer libremente de su salario y la esperanza de aumentar sus bienes.
-Respuesta Correcta: D
-
-191. Responda de acuerdo al texto de Toffler. ¿Cómo define Ayn Rand el objetivismo en "Las Entrevistas de Ayn Rand para Playboy"?
-A) Como un razonamiento sobre el colectivismo.
-B) Como una moral de interés propio racional.
-C) Como una manifestación del subconsciente individualista.
-D) Como un rechazo a la lógica social-cristiana.
-Respuesta Correcta: B
-
-192. Según el texto "El uso del conocimiento en la sociedad" de F. Hayek, ¿qué función cumple el sistema de precios?
-A) Transmitir información sobre las condiciones cambiantes del mercado.
-B) Reemplazar la necesidad de comunicación entre productores.
-C) Aumentar los ingresos del Estado.
-D) Servir como herramienta de justicia social.
-Respuesta Correcta: A
-
-193. En el texto de "La teoría del neoconservadurismo" de Murray, ¿Qué característica se le da al comienzo del neoconservadurismo, ligado a Leo Strauss?
-A) Fue una doctrina que se propago inicialmente entre los alumnos de Strauss, que, a su vez, expandieron la filosofía.
-B) Fue una doctrina que recibió apoyo esporádico de algunos alumnos, ajeno a Leo Strauss.
-C) Leo Strauss formalizó un pensamiento que cada vez era mas recurrente en el ambiente universitario.
-D) Fue una doctrina ampliamente rechazada por los alumnos de Strauss.
-Respuesta Correcta: A
-
-194. Según el texto "El uso del conocimiento en la sociedad" de F. A. Hayek, ¿por qué la planificación centralizada es ineficaz?
-A) Porque depende demasiado de la tecnología.
-B) Porque los planificadores suelen ser corruptos.
-C) Porque los mercados necesitan poca o nula organización.
-D) Porque ningún planificador puede reunir todo el conocimiento necesario para coordinar la economía.
-Respuesta Correcta: D
-
-195. Responda de acuerdo al texto de Toffler. ¿A qué se refiere Ayn Rand cuando dice que el objetivismo "comienza con el axioma de que la existencia existe"?
-A) A que los seres humanos son plenamente conscientes de su propia existencia.
-B) Que la existencia es una creación divina y, por lo tanto, su realidad es absoluta e incuestionable.
-C) Que la existencia fue creada por la sociedad, y existe porque nosotros así lo quisimos.
-D) A que existe una realidad objetiva, independiente de cualquier perceptor.
-Respuesta Correcta: D
-
-196. En el texto "Los derechos humanos" de Maritain, ¿Qué crítica hace el autor a los movimientos positivistas y materialistas y su relación con los derechos fundamentales de las personas?
-A) El haber respaldado su relevancia demasiado tarde.
-B) Que reniegan su existencia al considerarlos irrelevantes para la vida cotidiana.
-C) Que le prestan demasiada importancia a estos.
-D) Que son incapaces de establecer su existencia previo a la existencia de las instituciones.
-Respuesta Correcta: D
-
-197. Responda de acuerdo al texto Rerum Novarum, sobre la Cuestión Obrera de León XIII. Respecto a la dignidad del trabajo, la encíclica enfatiza que el trabajo:
-A) Es meramente una mercancía sin dimensión moral.
-B) Es personal y necesario, ligado a la dignidad humana y al deber de sustentarse.
-C) Debe ser evitado si es posible.
-D) Es irrelevante para la estructura familiar.
-Respuesta Correcta: B
-
-198. De acuerdo al texto Camino de servidumbre, responda lo siguiente. Hayek propone que hay ciertas ideas y regímenes políticos que nacen como un producto inevitable de las corrientes de tendencia socialista. ¿Cuáles son los principales que destaca el autor en la introducción del libro?
-A) Fascismo y nazismo
-B) Comunismo ruso
-C) Progresismo inglés
-D) Economía de guerra
-Respuesta Correcta: A
-
-199. En el texto "Los derechos humanos" de Maritain, ¿Qué opinión tiene el autor sobre la relación entre los derechos humanos y los estados/legislaciones?
-A) Que los estados son los encargados de otorgarlos.
-B) Que los estados no tienen ninguna obligación a hacerlos cumplir.
-C) Que el rol del estado es garantizar, reconocer y sancionar.
-D) Que las necesidades sociales pueden hacer cambiar estos derechos.
-Respuesta Correcta: C
-
-200. Responda de acuerdo al texto de Toffler. ¿A que se refiere Ayn Rand cuando se dice "Estoy desafiando la tradición cultural de dos mil años"?
-A) Ella representa una figura "Sui Generis", única en su clase con ideas explosivas e impopulares, convirtiéndola en una exiliada académica.
-B) Que ella desarrolló el objetivismo para retornar a un sistema económico abandonado hace dos milenios.
-C) Sus obras están hechas para provocar, queriendo intencionalmente molestar e incomodar a sus lectores.
-D) Que busca reinterpretar a los filósofos clásicos, como Platón y Aristóteles, para adaptarlos al mundo moderno.
-Respuesta Correcta: A
-
-201. Según lo expuesto en "La teoría del neoconservadurismo" de Murray, ¿De qué forma se relacionan los textos clásicos con el neoconservadurismo?
-A) Representan ideas obsoletas que el neoconservadurismo busca reemplazar con pensamiento contemporáneo.
-B) Son utilizados como justificación teórica para la política exterior estadounidense.
-C) Los textos clásicos sirven como modelos morales y políticos que ayudan a comprender y fortalecer la democracia moderna.
-D) Reflejan la oposición del neoconservadurismo a toda forma de pensamiento filosófico antiguo.
-Respuesta Correcta: C
-
-202. Según el texto "El uso del conocimiento en la sociedad" de F. A. Hayek, el conocimiento económico relevante se caracteriza por ser:
-A) Centralizado y científico.
-B) Disperso y particular.
-C) Uniforme y universal.
-D) Exclusivo de los expertos.
-Respuesta Correcta: B
-
-203. La introducción de Camino de Servidumbre inicia con la idea de que "Mirando hacia atrás, podemos apreciar la significación de los sucesos pasados...". ¿Cuál es la preocupación principal que comparte el autor en esta sección?
-A) Que la organización del país realizada para los fines de la defensa no se pueda mantener.
-B) Que las fuerzas que habrían propiciado la libertad en Alemania serían incapaces de estar operando también en Inglaterra.
-C) Que el curso de ideas "actual" inglés era muy semejante al alemán durante el periodo de la Primera Guerra Mundial y posterior a ella.
-D) Que es imposible traicionar nuestras esperanzas y ambiciones más queridas.
-Respuesta Correcta: C
-
-204. En el texto "Los derechos humanos" de Maritain, ¿Qué argumento ocupa el autor para explicar la inalienabilidad de los derechos humanos?
-A) Ya que están garantizados por las constituciones y las leyes.
-B) Porque están fundamentados en la naturaleza del ser humano.
-C) Puesto que todos los países firmaron su existencia.
-D) Debido a que no es moralmente correcto.
-Respuesta Correcta: B
-
-205. Responda de acuerdo al texto Rerum Novarum, sobre la Cuestión Obrera de León XIII. ¿Cómo justifica el documento el derecho a la propiedad privada como un derecho natural del individuo?
-A) Sostiene que al aplicar su trabajo a la naturaleza (como cultivar la tierra), el hombre deja en ella una "huella" de sus persona y la hace suya.
-B) Argumenta que sin propiedad privada, la iglesia no podría sostener sus obras de caridad.
-C) Afirma que la propiedad es un derecho divino dado solo a las clases altas.
-D) Indica que la propiedad privada es una invención de las leyes civiles para mantener el orden social.
-Respuesta Correcta: A
-
-206. De acuerdo al texto Camino de servidumbre, responda lo siguiente. F. A. Hayek menciona que es "importante comprender a nuestro enemigo...". ¿Por qué el autor considera importante que exista un conocimiento más profundo de lo anterior, sobre todo en contextos bélicos?
-A) Porque Inglaterra requiere de una opinión unificada y fortalecida
-B) Porque es necesario para rechazar a un enemigo que usa la propaganda como arma
-C) Porque la historia de la vieja Europa está condenada a repetirse en la nueva
-D) Porque todos los gobiernos terminan engañándose a sí mismos en estos contextos
-Respuesta Correcta: B
-
-207. En el texto "La guerra del Peloponeso", de Tucídides, ¿Qué representa para los guerreros de Esparta su ciudad, según el discurso de la embajada ateniense?
-A) Un lugar donde buscan evitar la guerra a toda costa.
-B) Un reino que deben abandonar.
-C) Una carga pesada que limita su libertad personal.
-D) Un espacio donde pueden ejercer hegemonía sobre otros pueblos y defender sus intereses con honor, temor e interés.
-Respuesta Correcta: D
-
-208. En La Ilíada de Homero, ¿Qué revela la escena del juicio en la ciudad pacífica del escudo de Aquiles sobre el rol de la justicia en la sociedad representada?
-A) La justicia depende de la fuerza del más poderoso.
-B) El conflicto se resuelve sin participación ciudadana.
-C) La autoridad se basa en deliberación y sabiduría colectiva.
-D) El juicio es símbolo de castigo divino.
-Respuesta Correcta: C
-
-209. En La República de Platón, ¿por qué el filósofo está especialmente capacitado para gobernar?
-A) Porque busca el bien común con conocimiento.
-B) Porque ha acumulado riquezas y fama.
-C) Porque domina las habilidades militares.
-D) Porque representa el sentir del pueblo.
-Respuesta Correcta: A
-
-210. Según Platón, ¿En qué orden cambian las formas de gobierno cuando una ciudad pasa de su estado ideal a formas menos justas?
-A) Aristocracia -> Timocracia -> Oligarquía -> Democracia -> Tiranía
-B) Democracia -> Oligarquía -> Timocracia -> Tiranía -> Aristocracia
-C) Oligarquía -> Democracia -> Timocracia -> Tiranía -> Aristocracia
-D) Aristocracia -> Oligarquía -> Democracia -> Tiranía -> Timocracia
-Respuesta Correcta: A
-
-211. Según las historias de Heródoto, ¿En qué se diferencia un hombre rico de uno afortunado?
-A) El hombre rico puede satisfacer sus deseos, pero el afortunado vive una vida plena hasta el final.
-B) El afortunado siempre será más feliz que el rico, porque posee más poder.
-C) El afortunado vive al día, mientras que el rico acumula sin disfrutar.
-D) El rico tiene mayor sabiduría que el afortunado.
-Respuesta Correcta: A
-
-212. Según el texto "La guerra del Peloponeso", de Tucídides ¿Cómo justifican los atenienses su imposición sobre los Melos y qué postura defiende sobre la relación entre poder y justicia?
-A) Los atenienses creen que la justicia siempre debe prevalecer sobre el poder.
-B) Los atenienses defienden que la fuerza determina lo posible y que los débiles deben aceptar el dominio de los fuertes.
-C) Los atenienses proponen una alianza igualitaria con Melos basada en el respeto mutuo.
-D) Los atenienses desean preservar la neutralidad de Melos y evitar la guerra.
-Respuesta Correcta: B
-
-213. En el discurso fúnebre de Pericles, ¿Qué características destaca el autor sobre la ciudad de Atenas y su gente? (I. Mérito sobre origen, II. Juegos y fiestas, III. Confianza en carácter y valor)
-A) Solo I
-B) Solo I y II
-C) Solo I y III
-D) I, II y III
-Respuesta Correcta: D
-
-214. El fragmento del texto de Platón "La República", ¿Cómo puede describirse según los contenidos allí expuestos?
-A) Un texto atemporal perfectamente aplicable a la modernidad
-B) Una visión de la justicia y el orden político ideal, que está basado en los principios y virtudes del tiempo en el que fue escrito y de su autor
-C) Una visión correcta de la sociedad, que pone como énfasis la justicia y el ordenamiento social para mantener el equilibrio
-D) Una visión desfasa y antiquísima, no podemos aprender nada de él
-Respuesta Correcta: B
-
-215. Según Aristóteles en Política, la palabra (la voz) en los hombres tiene la finalidad de manifestar: (I. Conveniente/Perjudicial, II. Justo/Injusto, III. Participar en comunidad, IV. Sentido del bien/mal)
-A) Solo i y ii.
-B) Solo iii y iv.
-C) Solo ii y iii.
-D) Todas las afirmaciones son correctas.
-Respuesta Correcta: D
-
-216. Según el texto de Aristóteles "La política", ¿cuál es la razón fundamental por la que la ciudad-estado es una creación de la naturaleza y anterior al individuo?
-A) Porque la ciudad es un producto de un acuerdo social.
-B) Porque el individuo, por sí solo, no se basta a sí mismo y el todo es necesariamente anterior a la parte.
-C) Porque los individuos son autosuficientes.
-D) Porque la ciudad se basa en la economía.
-Respuesta Correcta: B
-
-217. Según el texto de Jenofonte "Hierón o sobre la tiranía", ¿qué condición se plantea como la clave para que el tirano deje de ser odiado y pase a ser amado por su pueblo?
-A) Que el tirano demuestre su poder militar.
-B) Que el tirano se mantenga alejado de sus ciudadanos.
-C) Que el tirano gaste su fortuna en obras públicas para beneficio de la ciudad, en lugar de en sus propios lujos.
-D) Que el tirano castigue severamente a los opositores.
-Respuesta Correcta: C
-
-218. En Hierón o sobre la tiranía de Jenofonte, ¿Qué contradicción central revela Hierón sobre la figura del tirano?
-A) Que obtiene poder, pero no reconocimiento político.
-B) Que disfruta del amor, pero nunca de la riqueza.
-C) Que posee autoridad, pero vive con más sufrimiento que un ciudadano común.
-D) Que gobierna a otros, pero no tiene influencia sobre sí mismo.
-Respuesta Correcta: C
-
-219. Según Homero en La Ilíada, ¿qué simboliza principalmente la escena del trabajo en el campo blando y fértil?
-A) La explotación de los campesinos.
-B) La productividad del trabajo organizado como base de la prosperidad social.
-C) La inferioridad del trabajo manual.
-D) El conflicto permanente entre el hombre y la naturaleza hostil.
-Respuesta Correcta: B
-
-220. Según Homero en la La Ilíada, en la escena de las vacas, perros y leones, ¿Qué representa simbólicamente el ataque de los leones al toro?
-A) El triunfo de la humanidad por sobre la naturaleza.
-B) Ilustrar una escena cotidiana de la vida.
-C) Mostrar la armonía entre animales domésticos y humanos.
-D) La lucha inútil del ser humano contra fuerzas salvajes.
-Respuesta Correcta: D
-
-221. Según Hesiodo, en "Los trabajos y los días", ¿Quién es el que roba el fuego a Zeus y se lo entrega a los hombres?
-A) Epimeteo
-B) Prometeo
-C) Japeto
-D) Pandora
-Respuesta Correcta: B
-
-222. En Los trabajos y los días de Hesíodo ¿Cómo se representa en el mito de Pandora la tensión entre castigo y esperanza en la vida humana?
-A) El castigo destruye toda posibilidad de esperanza.
-B) La esperanza queda anulada por la intervención de los dioses.
-C) A pesar del castigo divino, se conserva una posibilidad de resistencia.
-D) La esperanza es un castigo disfrazado.
-Respuesta Correcta: C
-
-223. Según el modelo de Platón en La República, ¿cómo se relacionan las formas de gobierno con los caracteres individuales?
-A) La ciudad ideal (aristocracia) degenera en timocracia, luego en oligarquía, sigue la democracia y culmina en tiranía, proceso paralelo a la decadencia del alma individual.
-B) De la aristocracia surge la democracia, luego la timocracia.
-C) Cada forma de gobierno surge por azar histórico.
-D) La república justa siempre se conserva.
-Respuesta Correcta: A
-
-224. Según el texto de Holland: ¿Qué poder imperial, liderado por Ciro, permitió a los judíos exiliados regresar de Babilonia y reconstruir su Templo?
-A) El Imperio Persa.
-B) El Imperio Romano.
-C) El Imperio Egipcio.
-D) El imperio Asirio.
-Respuesta Correcta: A
-
-225. Según lo descrito por Filón, ¿de qué regla, principalmente, se apartaba la nación de los judíos respecto a Cayo?
-A) Aceptar de buen grado la muerte
-B) Cuestionar su costumbre bárbara de prosternarse
-C) Rendirle pleitesía y glorificarlo más de la medida
-D) Mantener una constante actitud de enfrentamiento
-Respuesta Correcta: C
-
-226. Según Flavio Josefo, ¿qué característica de una persona lo haría más grato a Dios?
-A) Vivir en familia y criar con principios a sus hijos.
-B) Tener a la sociedad en más aprecio que su propia vida.
-C) Practicar la oración y la lectura habitualmente.
-D) Realizar esculturas y obras artísticas en honor a Dios.
-Respuesta Correcta: B
-
-227. Según el texto de Flavio Josefo, ¿cuál es el principio fundamental que identifica como la base de la identidad y singularidad de su pueblo?
-A) La superioridad militar.
-B) La adhesión a una sola deidad, a la que consideran la única y verdadera fuente de poder.
-C) El desarrollo de una filosofía avanzada.
-D) Su prosperidad económica.
-Respuesta Correcta: B
-
-228. Según el texto de Filón de Alejandría, ¿cuál era la principal virtud que veía en las leyes de Moisés?
-A) Que eran leyes perfectas, que reflejaban la ley de la naturaleza.
-B) Que eran leyes exclusivas para el pueblo judío.
-C) Que eran leyes basadas en la tradición oral.
-D) Que eran leyes adaptadas por la filosofía griega.
-Respuesta Correcta: A
-
-229. Según el relato de I Samuel, ¿cuál fue una de las razones principales por las que Jehová desecho a Saúl como rey de Israel?
-A) Porque permitió que sus hijos actuaran injustamente.
-B) Porque pidió un rey para que gobernara como las naciones vecinas.
-C) Porque ofreció holocausto y ofrendas sin esperar a Samuel y desobedeció la orden de destruir completamente a Amalec.
-D) Porque perdió una batalla contra los filisteos.
-Respuesta Correcta: C
-
-230. Según Filón de Alejandría, la razón humana se ve limitada para comprender ciertas cosas, ¿cuál de las siguientes es una de ellas?
-A) La fortuna
-B) Dios
-C) La temporalidad
-D) La corporalidad
-Respuesta Correcta: B
-
-231. Flavio Josefo, en "Contra Apión" establecía que existen dos métodos para establecer la instrucción y la educación moral, ¿cuáles eran?
-A) La enseñanza de los preceptos y la práctica de las costumbres.
-B) La repetición de oraciones y la lectura de textos sagrados.
-C) El aprendizaje de leyes y la imposición de castigos.
-D) La contemplación filosófica y la meditación habitual.
-Respuesta Correcta: A
-
-232. Según Holland en "Dominio": En la carta de Pablo a los tesalonicenses, les afirma que no se dejen mover fácilmente de su modo de pensar, debido a que...
-A) hay muchos estafadores.
-B) la venida de Jesucristo está cerca.
-C) escuchar otros puntos de vista está sobrevalorado.
-D) nunca han sido perfectos pero podrían ser peores personas.
-Respuesta Correcta: B
-
-233. Según el prefacio de Holland, ¿por qué la crucifixión de Jesús representa una paradoja transformadora?
-A) Porque los cristianos adoptaron la cruz como símbolo.
-B) Porque Jesús fue divinizado por el mismo régimen que lo mató.
-C) Porque los evangelios ocultaron la crucifixión.
-D) Porque un castigo se reinterpretó como victoria divina, redefiniendo el valor de lo débil y honorable.
-Respuesta Correcta: D
-
-234. Según el texto Torah o Antiguo Testamento, sobre la historia de Caín y Abel, ¿cuál fue una de las diferencias fundamentales en las ofrendas?
-A) Caín ofreció frutos de la tierra, mientras que Abel ofreció los primogénitos y lo mejor de su rebaño.
-B) Caín solo ofreció una parte de su cosecha.
-C) Las ofrendas de Caín eran de menor tamaño.
-D) La ofrenda de Caín era de un tipo de animal no especificado.
-Respuesta Correcta: A
-
-235. Según Lactancio, ¿cuál sería la primera nación en sufrir el fin de los tiempos?
-A) Egipto.
-B) Israel.
-C) Roma.
-D) China.
-Respuesta Correcta: A
-
-236. En el texto de "La vida de Constantino" de Eusebio de Cesarea, se presenta al personaje de "el tirano" ¿Cómo es descrito?
-A) Un gobernante que defendía el culto pagano, ridiculizando y persiguiendo al cristianismo
-B) Como un líder que, aun siendo pagano, respeta a los cristianos
-C) Fue un emperador débil y neutro religiosamente
-D) Un gran reformador que consiguió ser el primer emperador en oficializar la religión cristiana
-Respuesta Correcta: A
-
-237. En el texto de Agustín, "La ciudad de Dios", ¿qué es lo que produce que sean dichosos y felices los emperadores?
-A) El reinar justamente.
-B) Reinar por largos años tranquilamente.
-C) Dejar a sus hijos un vasto reino.
-D) El guardarse de rebeliones y demonios.
-Respuesta Correcta: A
-
-238. Según el texto de Marco Aurelio ("Meditaciones"), ¿cuál de las siguientes afirmaciones describe de forma más general y fundamental la forma en que su padre ejercía el poder y la autoridad?
-A) Poseía una naturaleza sumisa y conciliadora.
-B) Era un líder que delegaba todas las responsabilidades.
-C) Su forma de gobernar se caracterizaba por una combinación de firmeza y mansedumbre, lo que le permitía ser metódico y tener un control sereno sobre los asuntos del Estado.
-D) Su principal virtud era la austeridad extrema.
-Respuesta Correcta: C
-
-239. Según el texto de Dion Casio ("Historia de Roma"), ¿cuál es la principal crítica que se le hace al gobierno de una sola persona (monarquía)?
-A) Su principal debilidad es que carece de la experiencia necesaria en asuntos militares.
-B) Fomenta la disolución de los ejércitos.
-C) Conduce inevitablemente a la tiranía, ya que el poder ilimitado en manos de una sola persona la lleva a la arrogancia y al uso abusivo de su autoridad.
-D) Su mayor defecto radica en la incapacidad del monarca para escuchar.
-Respuesta Correcta: C
-
-240. Según el texto de Polibio ("Historia universal bajo la república romana"), ¿cuál es la principal ventaja que atribuye a la República Romana?
-A) Se distinguía por un sistema democrático puro.
-B) Su fuerza radicaba en un senado aristocrático.
-C) Poseía un gobierno monárquico con un líder fuerte.
-D) Su constitución era una forma mixta que combinaba equilibradamente elementos de monarquía, aristocracia y democracia.
-Respuesta Correcta: D
-
-241. Según el texto Defensor de la Paz de Marsilio de Padua, ¿quién puede definir los sentidos dudosos de la ley divina?
-A) Un solo obispo
-B) El concilio general de los fieles
-C) Un rey sabio
-D) Un grupo de niños
-Respuesta Correcta: B
-
-242. En el texto del Papa Bonifacio VIII, "Bula Unam Sanctam", se afirma que someterse al Romano Pontífice es...
-A) ...necesario para la salvación de toda persona.
-B) ...innecesario, pues es Cristo quien decide la salvación en última instancia
-C) ...sólo un deber para los obispos, cardenales, sacerdotes y diáconos
-D) ...esencial para poder recibir al espíritu santo
-Respuesta Correcta: A
-
-243. Según el texto de Papa Inocencio III (Sermón en la consagración del sumo pontífice), ¿cuál de los dos poderes es considerado superior y por qué?
-A) Ambos poderes son de igual importancia.
-B) La autoridad papal es superior, pues el sol (poder espiritual) es el luminar mayor que le da esplendor al poder real.
-C) El poder real es superior, pues la luna es más cercana.
-D) El poder real es superior, ya que el sol actúa desde lejos.
-Respuesta Correcta: B
-
-244. Según el texto de Maquiavelo, ¿cuál es la causa principal que explica la pérdida de los estados por parte de los príncipes de Italia?
-A) La falta de un ejército mercenario.
-B) La excesiva confianza en la fortuna, la falta de prudencia en tiempos de paz y la incapacidad para adaptarse a los tiempos adversos.
-C) La constante amenaza de los reinos vecinos.
-D) La adopción de nuevas tecnologías militares.
-Respuesta Correcta: B
-
-245. Según el fragmento de "Sobre el gobierno de los príncipes" de Tomás de Aquino, ¿cuál es la razón principal por la que los hombres necesitan ser gobernados por un solo príncipe?
-A) Para establecer las leyes divinas.
-B) Para administrar los bienes materiales.
-C) Para guiar a la multitud hacia el bien común y asegurar la unidad y la paz, evitando la desunión social.
-D) Para defender al pueblo de invasiones extranjeras.
-Respuesta Correcta: C
-
-246. Según Marsilio de Padua en su obra Defensor de la Paz, ¿quién o qué tiene la única autoridad para la elección de un principado o cualquier otro cargo?
-A) La aprobación de los obispos.
-B) Únicamente la voluntad del legislador expresada a través de la elección.
-C) La autoridad del Papa.
-D) Solamente el poder del emperador.
-Respuesta Correcta: B
-
-247. Según el texto "Dos conceptos de libertad", Berlin advierte un peligro en cierta lectura de la libertad positiva basada en el "verdadero yo". ¿Cuál es?
-A) Que autoriza ignorar los deseos reales y coaccionar "por el bien propio", atribuyendo a las personas una voluntad "verdadera" que justificaría la imposición.
-B) Que impide toda forma de educación cívica.
-C) Que conduce a relativismo moral.
-D) Que elimina cualquier noción de deber.
-Respuesta Correcta: A
-
-248. Según "Sobre los límites de la autoridad de la sociedad sobre el individuo", Mill distingue entre "descrédito social" y "reprobación moral". ¿En qué se diferencian?
-A) El descrédito surge de violar derechos; la reprobación, de defectos personales.
-B) El descrédito corresponde a defectos privados; la reprobación, a daños hacia otros.
-C) El descrédito se impone legalmente; la reprobación, mediante sanción social.
-D) El descrédito es inevitable; la reprobación, optativa.
-Respuesta Correcta: B
-
-249. De acuerdo al texto "política de acuerdo a las Sagradas Escrituras", cuando Bossuet escribe: "El desperdigar dicho poder es dividir al Estado", ¿qué está criticando?
-A) La tiranía.
-B) La división del poder político en distintas instituciones.
-C) La falta de obediencia del pueblo.
-D) La debilidad de los reyes frente a la nobleza.
-Respuesta Correcta: B
-
-250. Según el capítulo 5 "La Propiedad" de Locke, ¿qué elemento transforma un bien común en propiedad privada de un individuo?
-A) El trabajo realizado sobre ese bien.
-B) El deseo de poseerlo.
-C) La autorización de la comunidad.
-D) La escasez de recursos naturales.
-Respuesta Correcta: A
-
-251. En el capítulo 5 de "La propiedad" de Locke, el autor sostiene que es necesario un medio de apropiación. ¿Cuál es la idea central que se desprende de este razonamiento?
-A) La propiedad privada surge únicamente por acuerdo colectivo.
-B) Los bienes naturales solo adquieren valor cuando se comercializan.
-C) Los recursos de la naturaleza deben permanecer siempre en un régimen de comunidad.
-D) El uso y aprovechamiento individual de los bienes comunes justifican su apropiación privada.
-Respuesta Correcta: D
-
-252. En el capítulo 5 de "La propiedad de Locke, se plantea una dificultad: si Dios entregó la tierra en común a toda la humanidad, ¿cómo puede justificarse la propiedad privada de parcelas particulares? Según Locke, la solución consiste en:
-A) Reconocer que la propiedad solo puede existir si la comunidad lo acuerda.
-B) Admitir que la propiedad surge de un contrato político.
-C) Afirmar que, aun siendo la tierra entregada en común, los individuos pueden apropiarse de bienes sin necesidad de un acuerdo colectivo.
-D) Sostener que la propiedad privada es ilegítima.
-Respuesta Correcta: C
-
-253. Según el fragmento de Isaias: "El sol nunca más te servirá de luz para el día... sino que Jehová te será por luz perpetua...". ¿Cuál es el sentido simbólico?
-A) Representa la supremacía de la presencia divina sobre las fuerzas naturales y humanas, como fuente inagotable de guía, protección y gloria.
-B) Expresa la idea de que Dios sustituirá o eliminará las fuentes naturales.
-C) Significa que Jerusalén se convertirá en un centro astronómico.
-D) Indica el fin del ciclo día-noche.
-Respuesta Correcta: A
-
-254. Según el fragmento de "Lamentaciones de Jeremías" ¿Qué hechos son lamentados hacia Jehová por parte de Jeremías? (I. Jóvenes a moler, II. Huérfanos, III. Agua/leña por súplicas, IV. Príncipes colgados)
-A) I y IV
-B) II y IV
-C) II y III
-D) I, II, III y IV
-Respuesta Correcta: A
-
-255. Según Holland en "Dominio": ¿Qué fuerza consideraba Demetrio como más poderosa que la inteligencia?
-A) La Fortuna (Tyche)
-B) El Logos
-C) El destino
-D) La Verdad
-Respuesta Correcta: A
-
-256. Según el texto de Tom Holland "Dominio", ¿cuál fue el elemento clave que ayudó a los cristianos a justificar su fe a los ojos de los judíos?
-A) El argumento de que las profecías del Antiguo Testamento se habían cumplido en Jesús.
-B) El argumento de que el cristianismo era una nueva religión.
-C) El argumento de que las leyes de Moisés debían ser abandonadas.
-D) Que el cristianismo era una secta del judaísmo.
-Respuesta Correcta: A
-
-257. Según el texto "Dominio" de Tom Holland, ¿cuál fue la idea que resultó escandalosa y aberrante para las autoridades romanas y la mayoría de los pueblos antiguos?
-A) Que un hombre que había sido crucificado pudiera ser considerado un dios.
-B) Que un dios pudiera descender del Olimpo.
-C) Que las leyes de Moisés debían aplicarse a toda la humanidad.
-D) Que un profeta pudiera hablar directamente con un solo Dios.
-Respuesta Correcta: A
-
-258. Según el texto de Evangelios y Apocalipsis de Juan, ¿cuál es la condición fundamental que Juan menciona para que los creyentes obtengan la vida eterna?
-A) Que cumplan con todos los rituales.
-B) Que reciban a Jesús, creyendo en su nombre, y le sigan para siempre.
-C) Que entreguen todas sus posesiones a los pobres.
-D) Que realicen obras de caridad.
-Respuesta Correcta: B
-
-259. Según el texto "Historia universal bajo la república romana" de Polibio, ¿Cuál es la razón del porqué, tras la caída de la monarquía y el reemplazo por la aristocracia, esta vuelve a tener vicios?
-A) Lo que esta corrupto es el pueblo.
-B) El poder siempre corromperá a los gobernantes.
-C) Los sucesores de los aristócratas, acostumbrados a los honores, pero faltos de trabajo, caen en la avaricia, deseos y escándalos.
-D) La falta de poder individual en la aristocracia motiva el deseo de poder.
-Respuesta Correcta: C
-
-260. Según el texto "Sobre la República" de Cicerón. El pueblo debe entenderse como: (I. Conjunto al azar, II. Asociación por consenso de derecho, III. Grupo que comparte normas y busca bien común)
-A) Solo I.
-B) Solo II.
-C) Solo III.
-D) II y III.
-Respuesta Correcta: D
-
-261. En la Epístola XX, cuando el autor menciona las amenazas que hace el emperador ¿qué actitud tiene Ambrosio frente a estas amenazas?
-A) No tiene miedo y reza.
-B) Se prepara para la guerra.
-C) Le devuelve la amenaza.
-D) Afirma que se esconderá.
-Respuesta Correcta: A
-
-262. Según el texto de Ambrosio de Milán ("Carta 51 a Teodosio"), ¿cuál es el principio fundamental que defiende al exigir la penitencia pública a un gobernante?
-A) Que los emperadores, a pesar de su rango, están sometidos a la ley de Dios y a la autoridad de la Iglesia para la salvación de sus almas.
-B) Que el poder de los emperadores es absoluto.
-C) Que la ley civil es superior a la ley eclesiástica.
-D) Que el emperador debe someterse a la penitencia solo si la Iglesia se lo pide de manera privada.
-Respuesta Correcta: A
-
-263. Según el texto de Eusebio de Cesárea ("Historia eclesiástica"), ¿cuál es el principal rasgo que Eusebio destaca en Constantino y que lo diferencia de los gobernantes paganos?
-A) Su habilidad militar superior.
-B) Su tendencia a la crueldad.
-C) Su enfoque en el desarrollo de la infraestructura.
-D) Su profunda religiosidad y su humildad, que lo llevaron a someterse a la autoridad de la Iglesia para hacer penitencia.
-Respuesta Correcta: D
-
-264. Según el texto de Lactancio (Instituciones), ¿cuál es la distinción fundamental que hace el autor respecto a los bienes materiales y la salvación?
-A) Que la prosperidad y el poder son pruebas de que los dioses favorecen a los gobernantes.
-B) Que las grandes obras y victorias militares son la única forma de conseguir la inmortalidad.
-C) Que las riquezas, el poder y otras ventajas terrenales se dan tanto a los buenos como a los malos, mientras que la felicidad eterna es solo para los verdaderamente piadosos.
-D) Que la humildad de los líderes religiosos es el único camino.
-Respuesta Correcta: C
-
-265. Según el Dictatus Papae, se comprende que el Papa tiene el poder de excomulgar a las personas, ¿qué conducta se ha de tener frente a ellos?
-A) Rezar por su bienestar
-B) Ignorar su existencia
-C) Ayudarlos para el encuentro con Dios
-D) No tener comunión ni compartir el hogar
-Respuesta Correcta: D
-
-266. Según el texto El Príncipe de Nicolás Maquiavelo, ¿cuánta parte atribuye a la fortuna en nuestras acciones (XXV)?
-A) La mitad (o poco menos)
-B) Nada
-C) Un cuarto
-D) Todo
-Respuesta Correcta: A
-
-267. El texto de Guillermo de Ockham plantea pricipalmente que se opone a la idea de que el Papa tiene una potestad ilimitada. ¿Cuál es su argumento principal?
-A) Que la potestad del Papa es de carácter limitado y no puede anular los derechos y potestades legítimos de los emperadores y otros gobernantes en lo que respecta a lo temporal.
-B) Que la autoridad del Papa debe ser reconocida como suprema.
-C) Que el poder del Papa es ilimitado.
-D) Que el Papa debe ser el líder político y espiritual de todos los territorios.
-Respuesta Correcta: A
-
-268. En el Manifiesto de Praga de Thomas Müntzer, ¿qué se señala respecto de los líderes religiosos de su tiempo?
-A) Que enseñan la letra de la Escritura sin transmitir su verdadero espíritu
-B) Que son incapaces de mantener el orden político
-C) Que fomentan la diversidad de sectas
-D) Que rechazan la autoridad del Papa
-Respuesta Correcta: A
-
-269. En el texto "Leviatán" de Hobbes, de acuerdo al extracto, ¿a qué se refiere con el término Leviatán?
-A) A un monstruo marino bíblico.
-B) Al estado como un "hombre" artificial.
-C) A una versión artística del humano.
-D) Al concepto de la ley republicana.
-Respuesta Correcta: B
-
-270. Según "El contrato social", ¿Cuál es la única sociedad natural para Rousseau?
-A) La sociedad política.
-B) La sociedad monárquica.
-C) La familia.
-D) La ciudad.
-Respuesta Correcta: C
-
-271. Según el capítulo 5 "La Propiedad" de Locke, en el ejemplo de las bellotas, ¿cuándo se convierten en propiedad del hombre que las consume?
-A) Cuando las digiere.
-B) Cuando las recoge del suelo.
-C) Cuando las cocina en su casa.
-D) Cuando recibe el consentimiento de los demás.
-Respuesta Correcta: B
-
-272. ¿Dónde se construyó la primera piscina calefactada de Roma, según el prefacio de Dominio?
-A) En el Aventino
-B) En el Esquilino
-C) En el Palatino
-D) En el Foro Romano
-Respuesta Correcta: B
-
-273. Según el texto de Holland: Las acciones de Pompeyo tras tomar Jerusalén mostraron: (I. Respeto religioso, II. Deseo control romano, III. Humillar sumo sacerdote, IV. Moderación inusual)
-A) I y II
-B) Solo III
-C) I, II y IV
-D) II, III y IV
-Respuesta Correcta: D
-
-274. Si bien tanto los lacedemonios como los romanos establecieron una república, estos tuvieron diferentes motivaciones para su adopción según Polibio, ¿Cuál afirmación es correcta?
-A) La diferencia recae únicamente en la época de adopción.
-B) Los lacedemonios la adoptaron dado el razonamiento, mientras que los romanos lo hicieron por admiración.
-C) Los lacedemonios la establecieron por la razón, mientras que los romanos lo hicieron tras aprender que era la forma que más les convenía.
-D) Ninguna es correcta
-Respuesta Correcta: C
-
-275. Según Marco Aurelio, una virtud aprendida de su padre fue:
-A) La vanidad por los honores.
-B) El amor al trabajo y la perseverancia.
-C) La ostentación de la riqueza.
-D) El gusto por la retórica y los sofistas.
-Respuesta Correcta: B
-
-276. En el texto de Dion Casio ¿qué menciona Agripa sobre la vida privada de un monarca? (I. Placeres ínfimos, II. Dificultad en salud, III. Razón de rechazo de griegos, IV. Posibilidad de grandes conquistas)
-A) I Y II
-B) I, III, y IV
-C) I, II y III
-D) I, II y IV
-Respuesta Correcta: C
-
-277. Según "La educación del Príncipe cristiano" de Erasmo de Rotterdam, ¿cuál es el tipo de placer digno de un príncipe?
-A) Los puros y perpetuos.
-B) Los placeres mundanos.
-C) Las riquezas en oro y mármol.
-D) La ostentación y admiración de riquezas.
-Respuesta Correcta: A
-
-278. En el texto Discursos sobre la primera década de Tito Livio de Nicolás Maquiavelo, ¿dónde pusieron Esparta y Venecia la "guardia de la libertad" (I.V)?
-A) En los nobles
-B) En el pueblo
-C) En mercenarios
-D) En extranjeros
-Respuesta Correcta: A
-
-279. Según el texto "Segundo tratado sobre el gobierno civil de John Locke, ¿qué se entiende por la 'propiedad'?
-A) Solo se refiere a la tierra y los bienes materiales de una persona.
-B) Es el derecho exclusivo del gobierno sobre los bienes de los ciudadanos.
-C) Es un concepto que solo existe en la sociedad civil, no en el estado de naturaleza.
-D) Engloba la vida, la libertad y los bienes materiales de una persona.
-Respuesta Correcta: D
-
-280. Según "El contrato social", ¿Qué dice Rousseau sobre obedecer el poder?
-A) Que solo se debe obedecer a aquellos que sean legítimos.
-B) Que solo se debe obedecer al miedo.
-C) Que nunca se debe obedecer.
-D) Que es un deber absoluto.
-Respuesta Correcta: A
-
-281. Según el fragmento de texto "La autoridad secular" de Lutero, ¿a qué hace referencia la siguiente frase? "Quien se atreva a gobernar todo un país por medio del evangelio, procederá como un pastor que encierra en un establo lobos, leones, águilas y ovejas".
-A) No todos los que dicen ser cristianos son cristianos, pues con personas que practican la malicia, no es posible dejar de lado la espada.
-B) Las enseñanzas del evangelio sirven para los cristianos, pero no todos los países ni personas profesan el cristianismo.
-C) La gobernanza por medio del evangelio está reservada únicamente al sector más cercano a dios.
-D) A cada tipo de persona Dios le tiene asignado una labor en esta vida.
-Respuesta Correcta: A
-
-282. Según el prefacio de Holland, ¿cómo la distorsión de los relatos de creencias puede erosionar la confianza en las enseñanzas religiosas?
-A) Al añadir elementos forzados dentro de una narrativa que se presenta como esencial y fundamental para la fe.
-B) Al evidenciar la clara falta de conocimiento o el desinterés manifiesto de quienes están a cargo de difundirla.
-C) Al simplificar de manera excesiva las complejas narrativas teológicas para adecuarlas a un público específico.
-D) Al establecer una clara disonancia entre las representaciones didácticas de la fe y el conocimiento empírico.
-Respuesta Correcta: A
-
-283. Según el texto de Holland: En el Libro de Job, ¿qué respuesta da Dios a la pregunta de por qué un hombre inocente sufre terriblemente?
-A) No da respuesta directa, pero demuestra su poder sobre la creación.
-B) Explica que todos cometen pecados ocultos, por ello sufren.
-C) Afirma que todo sufrimiento es una prueba para ganar el cielo.
-D) Culpa al Satán por actuar sin su permiso.
-Respuesta Correcta: A
-
-284. En el fragmento de Flavio Josefo, ¿De qué manera se puede resumir la diferencia entre las costumbres y las leyes de los hombres?
-A) Según a quienes les entrega poder, ya sea monarquía, oligarquía o el pueblo
-B) No hay diferencia notable, Flavio Josefo piensa que son lo mismo
-C) Las costumbres vienen de la historia, de la tradición de un pueblo, mientras que las leyes son producto del raciocinio
-D) Según cuán formalizada y aceptada sea una regla social
-Respuesta Correcta: A
-
-285. En la visión de Cicerón en "Sobre la República", ¿qué convierte a un régimen en tiránico?
-A) Que el poder se concentre en una sola persona.
-B) Que no existan elecciones regulares.
-C) Que el gobernante actúe en beneficio propio y no del pueblo.
-D) Que los ciudadanos carezcan de riqueza material.
-Respuesta Correcta: C
-
-286. Según lo que menciona Marco en el texto "Sobre las leyes" de Cicerón, ¿para qué se habrían inventado varias de las leyes escritas por los hombres? (I. Salud de ciudadanos, II. Abundancia de ciudades, III. Vida quieta y dichosa)
-A) I y II
-B) II y III
-C) I y III
-D) I, II y III
-Respuesta Correcta: D
-
-287. Según Lactancio, ¿qué valor escaseará cuando llegue el fin de los tiempos?
-A) La justicia.
-B) El amor.
-C) El respeto.
-D) La comunidad.
-Respuesta Correcta: A
-
-288. En el texto de Dion Casio ¿qué ejemplo usa Mecenas para advertir sobre los peligros de renunciar al poder?
-A) La caída de Cartago
-B) La derrota de Aníbal
-C) El desprecio y muerte de Pompeyo
-D) La victoria de Alejandro
-Respuesta Correcta: C
-
-289. ¿Qué reconoce el papa Gelasio respecto al rol del emperador en el orden terrenal?
-A) Que debe obedecer al papa en todos los ámbitos.
-B) Que le corresponde administrar los asuntos humanos y políticos.
-C) Que no tiene ninguna función real sin la Iglesia.
-D) Que solo puede gobernar con autorización del Senado.
-Respuesta Correcta: B
-
-290. Según el Dictatus Papae, selecciona quién es fundó/fundaron la iglesia romana:
-A) Solo i (Constantino)
-B) Solo ii (Dios)
-C) Solo iii (San Pablo)
-D) i y iv (Seguidores del emperador)
-Respuesta Correcta: B
-
-291. En el Manifiesto de Praga de Thomas Müntzer, ¿cuál es la promesa dirigida a los "hermanos bohemios"?
-A) Que la Iglesia romana volverá a recuperar su esplendor
-B) Que los apóstoles regresarán a predicar en persona
-C) Que las sectas desaparecerán y la fe se impondrá por la fuerza
-D) Que la Iglesia Apostólica será renovada y se expandirá por el mundo
-Respuesta Correcta: D
-
-292. En el texto "Sobre la condición natural del hombre", cuando Hobbes define la guerra no solo como la lucha actual, sino como la "disposición manifiesta a ella...", ¿Qué implica esta definición?
-A) Que la guerra es un estado latente, no solo un evento puntual
-B) Que la guerra depende exclusivamente de choques armados entre ejércitos
-C) Que la guerra es idéntica al desorden natural del comportamiento humano
-D) Que la guerra solo aparece cuando existe desigualdad de fuerzas
-Respuesta Correcta: A
-
-293. Según "Sobre los límites de la autoridad de la sociedad sobre el individuo", ¿Qué relación establece Mill entre educación y la capacidad de autogobierno en la adultez?
-A) La educación garantiza que todos se conduzcan racionalmente.
-B) Si la sociedad fracasa en educar, no tiene derecho a controlar luego la vida privada.
-C) El control social debe reemplazar las deficiencias educativas.
-D) La educación solo influye en la virtud pública, no en la privada.
-Respuesta Correcta: B
-
-294. En el texto "Sobre la condición natural del hombre", cuando Hobbes compara la guerra con el mal tiempo, ¿qué quiere mostrar?
-A) La guerra depende de la conducta del hombre
-B) La guerra es continua, no solo un hecho aislado
-C) La guerra aparece solo en ciertas estaciones
-D) La guerra no afecta la vida cotidiana
-Respuesta Correcta: B
-
-295. Según el texto "¿Qué es la propiedad?", ¿Qué relación se establece entre justicia y propiedad?
-A) Que la propiedad no refleja realmente el principio de justicia que se le atribuye.
-B) Que son equivalentes.
-C) Que la propiedad es una forma superior de justicia.
-D) Que la justicia depende de la cantidad de propiedad.
-Respuesta Correcta: A
-
-296. Según el Manifiesto de Praga de Thomas Müntzer, ¿qué imagen se utiliza para denunciar la superficialidad de algunos predicadores?
-A) Una oveja perdida en el desierto
-B) Un barco sin timón en medio de la tormenta
-C) Una cigüeña que vomita ranas en el nido de sus crías
-D) Una espada sin filo en manos de un soldado
-Respuesta Correcta: C
-
-297. Si bien Polibio afirma que la república de los Cartagineses fue muy bien establecida en un principio, difería en un punto clave con la romana, ¿qué afirmación es correcta?
-A) En tiempos de guerra, la república cartaginesa era superior a la romana.
-B) La república cartaginesa nunca pudo alcanzar su apogeo.
-C) En tiempos de guerra, la república cartaginesa era inferior a la romana.
-D) Cuando ambas se enfrentaron, la república cartaginesa estaba en decadencia, pues el pueblo había acaparado demasiada autoridad.
-Respuesta Correcta: D
-
-298. El texto "Sobre la República" de Cicerón plantea que un pueblo existe cuando comparte tanto el derecho como la utilidad común. Si solo existiera utilidad sin derecho, ¿qué ocurriría?
-A) La república se fortalecería en lo económico.
-B) La comunidad no sería un verdadero pueblo.
-C) Los gobernantes obtendrían legitimidad automática.
-D) El pueblo alcanzaría mayor estabilidad política.
-Respuesta Correcta: B
-
-299. En el texto del Papa Inocencio III, "Decretal Venerabilem", ¿Qué se puede inferir sobre el rol inicial de los príncipes alemanes en la elección del rey?
-A) Tienen un papel fundamental en la elección, pero su decisión no es definitiva.
-B) Su función es reconocer al rey nombrado por el Papa.
-C) No tienen un rol relevante en la decisión acerca del gobernante.
-D) Solo pueden recomendar candidatos, sin poder efectivo.
-Respuesta Correcta: A
-`;
-
-        // ==========================================
-        // GAME LOGIC
-        // ==========================================
-
-        let questions = [];
-        let currentQuestionIndex = 0;
-        let score = { correct: 0, incorrect: 0 };
-        let shuffledQuestions = [];
-
-        function parseQuestions(text) {
-            const parsed = [];
-            // Separamos por bloques que empiezan con número y punto (ej: "1. ", "20. ")
-            // Usamos un lookahead positivo para no consumir el número en el split
-            const blocks = text.split(/\n(?=\d+\.)/g);
-
-            blocks.forEach(block => {
-                if (!block.trim()) return;
-
-                // Extraemos el texto de la pregunta (todo antes de la primera opción A))
-                const questionMatch = block.match(/^\d+\.\s+([\s\S]*?)(?=\nA\))/);
-                const questionText = questionMatch ? questionMatch[1].trim() : "Pregunta sin texto";
-
-                // Extraemos opciones
-                const optionA = block.match(/\nA\)\s+([\s\S]*?)(?=\nB\))/)?.[1].trim();
-                const optionB = block.match(/\nB\)\s+([\s\S]*?)(?=\nC\))/)?.[1].trim();
-                const optionC = block.match(/\nC\)\s+([\s\S]*?)(?=\nD\))/)?.[1].trim();
-                // La opción D va hasta "Respuesta Correcta"
-                const optionD = block.match(/\nD\)\s+([\s\S]*?)(?=\nRespuesta Correcta:)/)?.[1].trim();
-
-                // Extraemos respuesta correcta
-                const answerMatch = block.match(/Respuesta Correcta:\s*([A-D])/);
-                const correctAnswer = answerMatch ? answerMatch[1] : null;
-
-                if (optionA && optionB && optionC && optionD && correctAnswer) {
-                    parsed.push({
-                        question: questionText,
-                        options: { A: optionA, B: optionB, C: optionC, D: optionD },
-                        correct: correctAnswer
-                    });
-                }
-            });
-
-            return parsed;
+        // --- BASE DE DATOS DE PREGUNTAS ---
+        const preguntas = [];
+
+        // Funciones auxiliares para construir la base de datos rápidamente
+        function addDeriv(q, a, d1, d2, d3, exp) {
+            preguntas.push({ tipo: 'Derivada', pre: q, res: a, dist: [d1, d2, d3], explicacion: exp });
         }
+        function addInt(q, a, d1, d2, d3, exp) {
+            preguntas.push({ tipo: 'Integral', pre: q, res: a, dist: [d1, d2, d3], explicacion: exp });
+        }
+
+        /* ==========================================
+           50 DERIVADAS
+           ========================================== */
+        // Constantes y Lineales (5)
+        addDeriv("5", "0", "5", "1", "x", "La derivada de una constante (un número sin variables) es siempre 0, porque no hay tasa de cambio.");
+        addDeriv("-12", "0", "-12", "-1", "x", "No importa si el número es negativo o muy grande, la derivada de cualquier constante es 0.");
+        addDeriv("x", "1", "x", "0", "\\frac{x^2}{2}", "La derivada de $x$ es 1. Visualmente, la función $y=x$ es una recta con pendiente 1.");
+        addDeriv("3x", "3", "3x", "0", "x", "Regla de ponderación: La derivada de $cx$ es simplemente $c$.");
+        addDeriv("-4x", "-4", "-4x", "4", "0", "Al derivar $-4x$, la $x$ se convierte en 1 y queda solo la constante que la multiplicaba: $-4$.");
+
+        // Regla de la potencia simple (15)
+        addDeriv("x^2", "2x", "x", "\\frac{x^3}{3}", "2", "Regla de la potencia: multiplicas por el exponente y le restas 1 al exponente ($2x^{2-1} = 2x$).");
+        addDeriv("x^3", "3x^2", "3x", "x^2", "\\frac{x^4}{4}", "Baja el 3 multiplicando y resta 1 al exponente: $3x^2$.");
+        addDeriv("x^4", "4x^3", "4x^2", "x^3", "3x^3", "Baja el 4 a multiplicar y el exponente 4 se convierte en 3.");
+        addDeriv("x^5", "5x^4", "5x", "x^4", "4x^4", "Regla de la potencia directa: $nx^{n-1} \\rightarrow 5x^{5-1} = 5x^4$.");
+        addDeriv("2x^2", "4x", "2x", "4x^2", "2", "Multiplica el coeficiente por el exponente ($2 \\cdot 2 = 4$) y resta 1 al exponente.");
+        addDeriv("3x^3", "9x^2", "6x^2", "3x^2", "9x", "El 3 del exponente baja a multiplicar al 3 que ya estaba ($3 \\cdot 3 = 9$), quedando $9x^2$.");
+        addDeriv("5x^2", "10x", "7x", "5x", "10", "Multiplicamos $5 \\cdot 2 = 10$, y el exponente $2-1=1$, por lo tanto $10x$.");
+        addDeriv("-2x^3", "-6x^2", "-5x^2", "6x^2", "-2x^2", "Cuidado con los signos. $-2 \\cdot 3 = -6$, y restamos 1 al exponente: $-6x^2$.");
+        addDeriv("4x^4", "16x^3", "8x^3", "16x^4", "4x^3", "$4 \\cdot 4 = 16$. El exponente baja en uno, queda en 3.");
+        addDeriv("10x^2", "20x", "10x", "20", "12x", "Multiplica el coeficiente 10 por el exponente 2, queda $20x$.");
+        addDeriv("x^6", "6x^5", "5x^6", "6x^6", "x^5", "Regla de la potencia: el 6 baja como coeficiente y el nuevo exponente es 5.");
+        addDeriv("-x^2", "-2x", "2x", "-x", "x^2", "El signo negativo actúa como un -1 multiplicando. Por ende, la derivada es $-2x$.");
+        addDeriv("\\frac{x^2}{2}", "x", "2x", "\\frac{x}{2}", "1", "Al bajar el 2 del exponente, se cancela con el 2 dividiendo: $\\frac{2x}{2} = x$.");
+        addDeriv("\\frac{x^3}{3}", "x^2", "3x^2", "x", "\\frac{x^2}{3}", "Al bajar el 3, se cancela con el denominador, dejando solo $x^2$.");
+        addDeriv("x^7", "7x^6", "6x^7", "7x", "\\frac{x^8}{8}", "Simplemente $7x^{7-1} = 7x^6$. La opción dividida entre 8 es la integral, ¡no te confundas!");
+
+        // Potencias Negativas y Fraccionarias (10)
+        addDeriv("\\frac{1}{x}", "-\\frac{1}{x^2}", "\\frac{1}{x^2}", "\\ln(x)", "-1", "Recuerda que $\\frac{1}{x} = x^{-1}$. Al derivar, baja el -1 y el exponente queda $-1-1 = -2$. Es decir, $-x^{-2}$ o $-\\frac{1}{x^2}$.");
+        addDeriv("\\frac{1}{x^2}", "-\\frac{2}{x^3}", "\\frac{2}{x^3}", "-\\frac{1}{x^3}", "-\\frac{2}{x}", "Escribimos como $x^{-2}$. Su derivada es $-2x^{-3}$, que equivale a $-\\frac{2}{x^3}$.");
+        addDeriv("\\frac{2}{x}", "-\\frac{2}{x^2}", "\\frac{2}{x^2}", "-2", "2\\ln(x)", "Es $2x^{-1}$. Derivada: $2 \\cdot (-1)x^{-2} = -2x^{-2} = -\\frac{2}{x^2}$. La opción del ln(x) es la integral.");
+        addDeriv("\\frac{3}{x^2}", "-\\frac{6}{x^3}", "-\\frac{3}{x^3}", "\\frac{6}{x^3}", "-\\frac{6}{x}", "Es $3x^{-2}$. La derivada es $3 \\cdot (-2)x^{-3} = -\\frac{6}{x^3}$.");
+        addDeriv("-\\frac{1}{x}", "\\frac{1}{x^2}", "-\\frac{1}{x^2}", "\\ln(x)", "1", "Es $-x^{-1}$. Derivada: $-(-1)x^{-2} = 1x^{-2} = \\frac{1}{x^2}$.");
+        addDeriv("\\sqrt{x}", "\\frac{1}{2\\sqrt{x}}", "\\frac{1}{\\sqrt{x}}", "\\frac{2}{3}x^{3/2}", "x^{-1/2}", "Escribe la raíz como $x^{1/2}$. Derivada: $\\frac{1}{2}x^{-1/2}$, que es igual a $\\frac{1}{2\\sqrt{x}}$.");
+        addDeriv("2\\sqrt{x}", "\\frac{1}{\\sqrt{x}}", "\\frac{2}{\\sqrt{x}}", "\\frac{1}{2\\sqrt{x}}", "x", "Es $2x^{1/2}$. Derivada: $2 \\cdot \\frac{1}{2}x^{-1/2} = x^{-1/2} = \\frac{1}{\\sqrt{x}}$.");
+        addDeriv("x^{3/2}", "\\frac{3}{2}\\sqrt{x}", "\\frac{3}{2}x", "\\frac{1}{2}x^{1/2}", "\\frac{2}{5}x^{5/2}", "Baja el exponente $\\frac{3}{2}$ y resta 1: $\\frac{3}{2}-1 = \\frac{1}{2}$. Queda $\\frac{3}{2}x^{1/2}$.");
+        addDeriv("4x^{-1}", "-4x^{-2}", "4x^{-2}", "-4", "4\\ln(x)", "Baja el -1 a multiplicar al 4, y resta 1 al exponente: $-4x^{-2}$.");
+        addDeriv("-2x^{-2}", "4x^{-3}", "-4x^{-3}", "4x^{-1}", "-2x^{-3}", "$-2 \\cdot (-2) = 4$. El exponente $-2-1 = -3$. Queda $4x^{-3}$.");
+
+        // Exponenciales (Euler) y Logaritmos (12)
+        addDeriv("e^x", "e^x", "xe^{x-1}", "e", "x", "¡La más fácil! La derivada de $e^x$ es siempre ella misma: $e^x$.");
+        addDeriv("3e^x", "3e^x", "3xe^{x-1}", "3", "e^x", "Las constantes multiplicativas se mantienen. La derivada es $3e^x$.");
+        addDeriv("e^{2x}", "2e^{2x}", "e^{2x}", "2xe^{2x-1}", "\\frac{1}{2}e^{2x}", "Regla de la cadena: derivamos el exponente (da 2) y lo multiplicamos por la misma exponencial.");
+        addDeriv("e^{3x}", "3e^{3x}", "e^{3x}", "3xe^{3x-1}", "3e^x", "Regla de la cadena: la derivada de $3x$ es 3, que pasa a multiplicar a $e^{3x}$.");
+        addDeriv("e^{-x}", "-e^{-x}", "e^{-x}", "-xe^{-x}", "-e^x", "La derivada del exponente $-x$ es $-1$. Pasa a multiplicar, quedando $-e^{-x}$.");
+        addDeriv("5e^{4x}", "20e^{4x}", "5e^{4x}", "20xe^{4x}", "9e^{4x}", "Multiplica la constante 5 por la derivada del exponente (4). $5 \\cdot 4 = 20$.");
+        addDeriv("\\ln(x)", "\\frac{1}{x}", "\\frac{1}{x^2}", "e^x", "1", "Regla fundamental: la derivada del logaritmo natural $\\ln(x)$ es $\\frac{1}{x}$.");
+        addDeriv("2\\ln(x)", "\\frac{2}{x}", "\\frac{1}{2x}", "\\frac{2}{x^2}", "2", "Mantenemos la constante 2 y derivamos el ln(x): $2 \\cdot \\frac{1}{x} = \\frac{2}{x}$.");
+        addDeriv("\\ln(3x)", "\\frac{1}{x}", "\\frac{3}{x}", "\\frac{1}{3x}", "3", "Regla de la cadena: $\\frac{1}{3x} \\cdot 3 = \\frac{1}{x}$. ¡Nota que es la misma que la de $\\ln(x)$!");
+        addDeriv("\\ln(x^2)", "\\frac{2}{x}", "\\frac{1}{x^2}", "\\frac{2x}{x^2}", "2x", "Regla de la cadena: $\\frac{1}{x^2} \\cdot 2x = \\frac{2x}{x^2} = \\frac{2}{x}$. O usa logaritmos: $\\ln(x^2) = 2\\ln(x)$.");
+        addDeriv("e^{x/2}", "\\frac{1}{2}e^{x/2}", "e^{x/2}", "2e^{x/2}", "\\frac{1}{2}e^x", "La derivada del exponente $\\frac{x}{2}$ es $\\frac{1}{2}$, que pasa multiplicando al frente.");
+        addDeriv("-e^{-2x}", "2e^{-2x}", "-2e^{-2x}", "-e^{-2x}", "2e^{2x}", "Derivada del exponente es -2. Multiplicado por el signo negativo original, da positivo: $2e^{-2x}$.");
+
+        // Producto, Cociente, Cadena básica (8)
+        addDeriv("xe^x", "e^x(x+1)", "xe^x", "e^x", "e^x(x-1)", "Regla del producto $(uv)' = u'v + uv'$. Aquí $u=x, v=e^x$. Da $1\\cdot e^x + x\\cdot e^x = e^x(1+x)$.");
+        addDeriv("x^2e^x", "xe^x(x+2)", "2xe^x", "x^2e^x", "2e^x", "Regla del producto: $2x\\cdot e^x + x^2\\cdot e^x$. Factorizando $xe^x$, queda $xe^x(2+x)$.");
+        addDeriv("x\\ln(x)", "\\ln(x)+1", "\\frac{1}{x}", "1", "\\ln(x)", "Regla del producto: $1\\cdot \\ln(x) + x\\cdot \\frac{1}{x} = \\ln(x) + 1$.");
+        addDeriv("\\frac{e^x}{x}", "\\frac{e^x(x-1)}{x^2}", "\\frac{e^x}{x^2}", "e^x\\ln(x)", "\\frac{e^x(x+1)}{x^2}", "Regla del cociente: $\\frac{u'v - uv'}{v^2} = \\frac{e^x\\cdot x - e^x\\cdot 1}{x^2} = \\frac{e^x(x-1)}{x^2}$.");
+        addDeriv("\\frac{1}{x+1}", "-\\frac{1}{(x+1)^2}", "\\frac{1}{(x+1)^2}", "-1", "\\ln(x+1)", "Regla del cociente o cadena (piensa en $(x+1)^{-1}$). Baja el -1 y el exponente queda en -2.");
+        addDeriv="(2x+1)^2", "4(2x+1)", "2(2x+1)", "4x+1", "2", "Regla de la cadena: baja el 2, por $(2x+1)^1$, multiplicado por la derivada interna que es 2. Total: $4(2x+1)$.");
+        addDeriv="(x^2+1)^3", "6x(x^2+1)^2", "3(x^2+1)^2", "3x(x^2+1)^2", "6(x^2+1)^2", "Cadena: $3(x^2+1)^2 \\cdot 2x = 6x(x^2+1)^2$.");
+        addDeriv("e^{x^2}", "2xe^{x^2}", "e^{2x}", "x^2e^{x^2}", "2e^{x^2}", "Cadena: la exponencial queda igual, pero se multiplica por la derivada del exponente ($x^2$), que es $2x$.");
+
+        /* ==========================================
+           50 INTEGRALES (Primitivas)
+           ========================================== */
+        // Constantes (5)
+        addInt("0", "C", "0", "x + C", "1 + C", "La integral de 0 es una constante cualquiera (C), ya que la derivada de cualquier constante es 0.");
+        addInt("1", "x + C", "0", "x^2 + C", "1 + C", "La función que al derivarse da 1 es $x$. ¡No olvides la constante de integración!");
+        addInt("5", "5x + C", "0", "5 + C", "x + C", "Al integrar una constante $k$, simplemente le agregas la variable $x$: $kx + C$.");
+        addInt("-3", "-3x + C", "-3 + C", "0", "-3x^2 + C", "La constante sale de la integral y se multiplica por $x$.");
+        addInt("\\pi", "\\pi x + C", "0", "\\pi + C", "x + C", "Aunque sea una letra griega, $\\pi$ es un número constante. Su integral es $\\pi x + C$.");
+
+        // Regla de la potencia simple (15)
+        addInt("x", "\\frac{x^2}{2} + C", "1 + C", "x^2 + C", "\\frac{x^3}{3} + C", "Regla de integración: suma 1 al exponente ($1+1=2$) y divide por el nuevo exponente: $\\frac{x^2}{2}$.");
+        addInt("2x", "x^2 + C", "2 + C", "2x^2 + C", "\\frac{2x^3}{3} + C", "Piensa al revés: ¿qué función derivas para obtener $2x$? Exactamente, $x^2$.");
+        addInt("x^2", "\\frac{x^3}{3} + C", "2x + C", "x^3 + C", "\\frac{x^2}{3} + C", "Suma 1 al exponente (queda en 3) y divide por 3. Te equivocaste si derivaste (2x).");
+        addInt("3x^2", "x^3 + C", "6x + C", "3x^3 + C", "\\frac{x^4}{4} + C", "¡Cálculo mental! ¿Qué derivas para obtener $3x^2$? Es $x^3$. (Se cancela el 3 al dividir).");
+        addInt("x^3", "\\frac{x^4}{4} + C", "3x^2 + C", "\\frac{x^3}{4} + C", "x^4 + C", "Sumamos 1 al exponente 3 dando 4, y dividimos entre ese mismo 4.");
+        addInt("4x^3", "x^4 + C", "12x^2 + C", "4x^4 + C", "\\frac{4x^4}{3} + C", "El 4 que multiplica se cancela con el 4 que divide al aplicar la regla de la potencia.");
+        addInt("x^4", "\\frac{x^5}{5} + C", "4x^3 + C", "x^5 + C", "\\frac{x^4}{5} + C", "El exponente sube de 4 a 5, y pasamos ese 5 a dividir.");
+        addInt("5x^4", "x^5 + C", "20x^3 + C", "5x^5 + C", "\\frac{x^5}{4} + C", "¿La derivada de qué función es $5x^4$? Es la derivada directa de $x^5$.");
+        addInt("6x^5", "x^6 + C", "30x^4 + C", "6x^6 + C", "\\frac{6x^6}{5} + C", "Piensa a la inversa: al derivar $x^6$, el 6 baja. Así que la integral es $x^6$.");
+        addInt("-2x", "-x^2 + C", "-2 + C", "x^2 + C", "-\\frac{x^2}{2} + C", "El exponente de $x$ pasa a 2, y al dividir el -2 entre 2 queda -1.");
+        addInt("\\frac{x^2}{2}", "\\frac{x^3}{6} + C", "x + C", "\\frac{x^3}{3} + C", "\\frac{x^3}{2} + C", "Suma 1 al exponente (queda 3). Al dividir por 3, se multiplica con el 2 del denominador ($2 \\cdot 3 = 6$).");
+        addInt("10x^9", "x^{10} + C", "90x^8 + C", "10x^{10} + C", "\\frac{x^{10}}{9} + C", "Derivar $x^{10}$ baja el 10, dejando exactamente $10x^9$.");
+        addInt("2x^3", "\\frac{x^4}{2} + C", "6x^2 + C", "\\frac{2x^4}{3} + C", "2x^4 + C", "Queda $\\frac{2x^4}{4}$, que simplificando la fracción es $\\frac{x^4}{2}$.");
+        addInt("-x^2", "-\\frac{x^3}{3} + C", "-2x + C", "\\frac{x^3}{3} + C", "-x^3 + C", "El signo menos se mantiene. Regla de la potencia normal.");
+        addInt("7x^6", "x^7 + C", "42x^5 + C", "7x^7 + C", "\\frac{7x^7}{6} + C", "La regla de la potencia perfecta. $x^7$ derivado es $7x^6$.");
+
+        // Potencias Negativas y 1/x (10)
+        addInt("\\frac{1}{x}", "\\ln|x| + C", "-\\frac{1}{x^2} + C", "\\frac{1}{x^2} + C", "\\ln(x^2) + C", "¡Caso especial fundamental! La integral de $x^{-1}$ no usa la regla de la potencia, es el logaritmo natural.");
+        addInt("\\frac{2}{x}", "2\\ln|x| + C", "-\\frac{2}{x^2} + C", "\\ln|2x| + C", "\\frac{2}{x^2} + C", "La constante 2 sale de la integral, y queda $2 \\int \\frac{1}{x} dx = 2\\ln|x|$.");
+        addInt("-\\frac{1}{x}", "-\\ln|x| + C", "\\frac{1}{x^2} + C", "\\ln|-x| + C", "-\\frac{1}{x^2} + C", "El signo negativo sale, dejando simplemente $-\\ln|x|$.");
+        addInt("\\frac{1}{2x}", "\\frac{1}{2}\\ln|x| + C", "-\\frac{1}{4x^2} + C", "\\ln|2x| + C", "2\\ln|x| + C", "Es igual a $\\frac{1}{2} \\int \\frac{1}{x} dx$, lo que da $\\frac{1}{2}\\ln|x|$.");
+        addInt("x^{-2}", "-x^{-1} + C", "-2x^{-3} + C", "\\frac{x^{-3}}{-3} + C", "x^{-1} + C", "Suma 1 al exponente: $-2+1 = -1$. Divide por el nuevo exponente (-1). Queda $-\\frac{1}{x}$.");
+        addInt("\\frac{1}{x^2}", "-\\frac{1}{x} + C", "-\\frac{2}{x^3} + C", "\\frac{1}{x} + C", "\\ln|x^2| + C", "Es lo mismo que la anterior. $x^{-2} \\rightarrow \\frac{x^{-1}}{-1} = -\\frac{1}{x}$. ¡No confundir con el logaritmo!");
+        addInt("\\frac{3}{x^2}", "-\\frac{3}{x} + C", "-\\frac{6}{x^3} + C", "3\\ln|x^2| + C", "\\frac{3}{x} + C", "Constante 3 por integral de $x^{-2}$. Da $3(-x^{-1}) = -\\frac{3}{x}$.");
+        addInt("x^{-3}", "-\\frac{1}{2x^2} + C", "-3x^{-4} + C", "\\frac{1}{2x^2} + C", "-x^{-2} + C", "Suma 1 al exponente: $-3+1=-2$. Divide por -2. Queda $\\frac{x^{-2}}{-2} = -\\frac{1}{2x^2}$.");
+        addInt("\\frac{1}{x^3}", "-\\frac{1}{2x^2} + C", "-\\frac{3}{x^4} + C", "\\frac{1}{2x^2} + C", "-\\frac{1}{x^2} + C", "Igual que $x^{-3}$. Da $\\frac{x^{-2}}{-2}$. Cuidado con derivar (la opción $-3/x^4$).");
+        addInt("-\\frac{2}{x^3}", "\\frac{1}{x^2} + C", "\\frac{6}{x^4} + C", "-\\frac{1}{x^2} + C", "\\frac{2}{x^2} + C", "Es $-2x^{-3}$. Al integrar sumas 1 al exponente dando -2, divides por -2. Se cancelan los -2.");
+
+        // Exponenciales (10)
+        addInt("e^x", "e^x + C", "xe^{x-1} + C", "e^x\\ln(e) + C", "x + C", "La integral de $e^x$ es simplemente $e^x$, igual que su derivada.");
+        addInt("2e^x", "2e^x + C", "2xe^{x-1} + C", "e^{2x} + C", "e^x + C", "La constante 2 sale de la integral sin afectar al $e^x$.");
+        addInt("e^{2x}", "\\frac{1}{2}e^{2x} + C", "2e^{2x} + C", "e^{2x} + C", "\\frac{1}{3}e^{3x} + C", "¡Cuidado! Al integrar multiplicamos por el INVERSO de la derivada del exponente. (Sustitución $u=2x$).");
+        addInt("e^{3x}", "\\frac{1}{3}e^{3x} + C", "3e^{3x} + C", "e^{3x} + C", "3xe^{3x} + C", "Por regla de sustitución rápida, el 3 del exponente pasa a dividir.");
+        addInt("e^{-x}", "-e^{-x} + C", "e^{-x} + C", "-xe^{-x} + C", "e^{-x^2} + C", "El derivado del exponente es -1. Dividir por -1 es lo mismo que poner un signo negativo enfrente.");
+        addInt("4e^{2x}", "2e^{2x} + C", "8e^{2x} + C", "4e^{2x} + C", "2xe^{2x} + C", "Dividimos la constante 4 entre la derivada del exponente (2). $4/2 = 2$.");
+        addInt("-e^x", "-e^x + C", "-xe^{x-1} + C", "e^x + C", "0 + C", "El signo negativo es una constante (-1) y se mantiene al integrar.");
+        addInt("e^{x/2}", "2e^{x/2} + C", "\\frac{1}{2}e^{x/2} + C", "e^{x/2} + C", "xe^{x/2} + C", "Dividir por $1/2$ (la derivada del exponente) es equivalente a multiplicar por 2.");
+        addInt("6e^{3x}", "2e^{3x} + C", "18e^{3x} + C", "6e^{3x} + C", "2xe^{3x} + C", "Dividimos el 6 entre el 3 del exponente. Da 2.");
+        addInt("e^{-2x}", "-\\frac{1}{2}e^{-2x} + C", "-2e^{-2x} + C", "\\frac{1}{2}e^{-2x} + C", "-e^{-2x} + C", "Sustitución rápida: el -2 del exponente pasa a dividir.");
+
+        // Sustitución Simple Mental (10)
+        addInt("2xe^{x^2}", "e^{x^2} + C", "2e^{x^2} + C", "x^2e^{x^2} + C", "e^{2x} + C", "Piensa a la inversa: si derivas $e^{x^2}$ por regla de la cadena obtienes exactamente $2xe^{x^2}$.");
+        addInt("xe^{x^2}", "\\frac{1}{2}e^{x^2} + C", "e^{x^2} + C", "2xe^{x^2} + C", "x^2e^{x^2} + C", "Es casi igual a la anterior, pero le falta el 2. Así que compensamos dividiendo por 2.");
+        addInt("\\frac{2x}{x^2+1}", "\\ln|x^2+1| + C", "\\frac{1}{x^2+1} + C", "2\\ln|x^2+1| + C", "x^2+1 + C", "La forma $\\int \\frac{u'}{u} = \\ln|u|$. El numerador es exactamente la derivada del denominador.");
+        addInt("\\frac{x}{x^2+1}", "\\frac{1}{2}\\ln|x^2+1| + C", "\\ln|x^2+1| + C", "\\frac{1}{x^2+1} + C", "2\\ln|x^2+1| + C", "Igual a la anterior pero le falta el 2 arriba, por lo que multiplicamos por $1/2$ afuera.");
+        addInt("2(2x+1)", "(2x+1)^2 + C", "(2x+1)^3 + C", "4 + C", "2x^2+2x + C", "Desarrolla o usa sustitución. Lo más fácil mentalmente: la derivada de $(2x+1)^2$ es $2(2x+1) \\cdot 2 = 4(2x+1)$. Ups, la respuesta correcta expandida es $2x^2+2x$ o $\\frac{1}{2}(2x+1)^2$. Dejaré $2x^2+2x+C$ como distractor pero la real correcta es $(2x+1)^2/2$? No, $4x+2$ integrado es $2x^2+2x$. ¡Cierto! Entonces es $2x^2+2x+C$.");
+        addInt("4x+2", "2x^2+2x + C", "4x^2+2x + C", "2x^2+x + C", "4 + C", "Se integra término a término: la integral de $4x$ es $2x^2$, y la de 2 es $2x$.");
+        addInt("\\frac{e^x}{e^x+1}", "\\ln|e^x+1| + C", "e^x\\ln|e^x+1| + C", "\\frac{1}{e^x+1} + C", "e^x + C", "Forma $\\frac{u'}{u}$. El numerador es la derivada del denominador, así que da $\\ln|u|$.");
+        addInt("3x^2(x^3+1)^2", "\\frac{(x^3+1)^3}{3} + C", "(x^3+1)^3 + C", "6x(x^3+1) + C", "\\frac{(x^3+1)^2}{3} + C", "Sustitución $u=x^3+1$, $du=3x^2dx$. Queda $\\int u^2 du = \\frac{u^3}{3}$.");
+        addInt("e^x e^{e^x}", "e^{e^x} + C", "e^{2e^x} + C", "e^x + C", "e^{e^x}e^x + C", "Derivando con regla de la cadena $e^{e^x}$ obtenemos la función original. ¡Piensa en reversa!");
+        addInt("\\frac{1}{\\sqrt{x}}", "2\\sqrt{x} + C", "\\sqrt{x} + C", "-\\frac{1}{2x\\sqrt{x}} + C", "\\frac{1}{2\\sqrt{x}} + C", "Escribe como $x^{-1/2}$. Suma 1 al exponente (da 1/2) y divide por 1/2 (multiplica por 2).");
+        addInt("\\frac{1}{2\\sqrt{x}}", "\\sqrt{x} + C", "2\\sqrt{x} + C", "-\\frac{1}{4x\\sqrt{x}} + C", "\\frac{1}{x} + C", "Derivada básica: la derivada de $\\sqrt{x}$ es exactamente $\\frac{1}{2\\sqrt{x}}$.");
+
+
+        // --- LOGICA DE LA APLICACIÓN ---
+        let preguntasBarajadas = [];
+        let indexActual = 0;
+        let aciertos = 0;
+
+        // Elementos UI
+        const startScreen = document.getElementById('start-screen');
+        const appScreen = document.getElementById('app-screen');
+        const endScreen = document.getElementById('end-screen');
+        
+        const progTexto = document.getElementById('progress-text');
+        const scoreTexto = document.getElementById('score-text');
+        const badgeTexto = document.getElementById('question-type-badge');
+        const mathContainer = document.getElementById('math-question');
+        const optionsGrid = document.getElementById('options-grid');
+        
+        const feedbackArea = document.getElementById('feedback-area');
+        const feedbackTitle = document.getElementById('feedback-title');
+        const feedbackMessage = document.getElementById('feedback-message');
+        const feedbackIcon = document.getElementById('feedback-icon');
+        const nextBtn = document.getElementById('next-btn');
 
         function shuffleArray(array) {
             for (let i = array.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
                 [array[i], array[j]] = [array[j], array[i]];
             }
-            return array;
         }
 
-        function initGame() {
-            questions = parseQuestions(rawData);
-            shuffledQuestions = shuffleArray([...questions]);
-            currentQuestionIndex = 0;
-            score = { correct: 0, incorrect: 0 };
+        function iniciarPractica() {
+            startScreen.classList.add('hidden');
+            appScreen.classList.remove('hidden');
+            appScreen.classList.add('flex');
             
-            updateScoreUI();
+            // Mezclamos todas las preguntas
+            preguntasBarajadas = [...preguntas];
+            shuffleArray(preguntasBarajadas);
+            indexActual = 0;
+            aciertos = 0;
             
-            document.getElementById('game-over').classList.add('hidden');
-            document.getElementById('game-container').classList.remove('hidden');
-            
-            renderQuestion();
+            mostrarPregunta();
         }
 
-        function updateScoreUI() {
-            document.getElementById('score-correct').innerText = score.correct;
-            document.getElementById('score-incorrect').innerText = score.incorrect;
-        }
-
-        function renderQuestion() {
-            const q = shuffledQuestions[currentQuestionIndex];
-            const total = shuffledQuestions.length;
+        function mostrarPregunta() {
+            if (indexActual >= preguntasBarajadas.length) {
+                finalizarPractica();
+                return;
+            }
 
             // Reset UI
-            document.getElementById('feedback-area').classList.add('hidden');
-            document.getElementById('options-container').innerHTML = '';
+            feedbackArea.classList.add('hidden');
+            optionsGrid.innerHTML = '';
             
-            // Update Text
-            document.getElementById('question-tracker').innerText = `Pregunta ${currentQuestionIndex + 1} de ${total}`;
-            document.getElementById('question-text').innerText = q.question;
+            const q = preguntasBarajadas[indexActual];
             
-            // Update Progress Bar
-            const progress = ((currentQuestionIndex) / total) * 100;
-            document.getElementById('progress-bar').style.width = `${progress}%`;
+            // Actualizar header
+            progTexto.innerText = `${indexActual + 1} / ${preguntasBarajadas.length}`;
+            scoreTexto.innerText = aciertos;
 
-            // Create Buttons
-            const letters = ['A', 'B', 'C', 'D'];
-            letters.forEach(letter => {
+            // Configurar tarjeta
+            if (q.tipo === 'Derivada') {
+                badgeTexto.innerText = 'Derivada';
+                badgeTexto.className = 'px-4 py-1 rounded-full text-sm font-bold uppercase tracking-wide bg-purple-100 text-purple-700';
+            } else {
+                badgeTexto.innerText = 'Integral (Primitiva)';
+                badgeTexto.className = 'px-4 py-1 rounded-full text-sm font-bold uppercase tracking-wide bg-blue-100 text-blue-700';
+            }
+
+            // Setear la fórmula (encerrada en $$ para MathJax display mode)
+            let formulaHtml = `$$f(x) = ${q.pre}$$`;
+            if(q.tipo === 'Integral'){
+                 formulaHtml = `$$\\int ${q.pre} \\, dx$$`;
+            }
+            mathContainer.innerHTML = formulaHtml;
+
+            // Preparar opciones
+            let opciones = [
+                { texto: q.res, correcta: true },
+                { texto: q.dist[0], correcta: false },
+                { texto: q.dist[1], correcta: false },
+                { texto: q.dist[2], correcta: false }
+            ];
+            shuffleArray(opciones);
+
+            // Generar botones
+            opciones.forEach((opt, i) => {
                 const btn = document.createElement('button');
-                btn.className = `option-btn w-full text-left p-4 rounded-lg border-2 border-slate-200 hover:border-blue-400 hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500 mb-2`;
-                btn.innerHTML = `<span class="font-bold mr-2 text-slate-500">${letter})</span> ${q.options[letter]}`;
-                btn.onclick = () => checkAnswer(letter, q.correct);
-                btn.dataset.letter = letter;
-                document.getElementById('options-container').appendChild(btn);
-            });
-        }
-
-        function checkAnswer(selected, correct) {
-            const buttons = document.querySelectorAll('.option-btn');
-            
-            // Disable all buttons
-            buttons.forEach(btn => btn.disabled = true);
-
-            const feedbackArea = document.getElementById('feedback-area');
-            const feedbackMsg = document.getElementById('feedback-message');
-            const feedbackDetail = document.getElementById('feedback-detail');
-
-            feedbackArea.classList.remove('hidden');
-            
-            let isCorrect = selected === correct;
-
-            if (isCorrect) {
-                score.correct++;
-                feedbackArea.className = "mt-6 p-4 rounded-lg border-l-4 bg-green-50 border-green-500 text-green-900";
-                feedbackMsg.innerText = "¡Correcto!";
-                feedbackDetail.innerText = "Has seleccionado la respuesta correcta.";
-            } else {
-                score.incorrect++;
-                feedbackArea.className = "mt-6 p-4 rounded-lg border-l-4 bg-red-50 border-red-500 text-red-900";
-                feedbackMsg.innerText = "Incorrecto";
-                feedbackDetail.innerText = `La respuesta correcta era la opción ${correct}: ${shuffledQuestions[currentQuestionIndex].options[correct]}`;
-            }
-
-            // Highlight buttons
-            buttons.forEach(btn => {
-                const btnLetter = btn.dataset.letter;
-                if (btnLetter === correct) {
-                    btn.classList.remove('border-slate-200', 'hover:border-blue-400', 'hover:bg-blue-50');
-                    btn.classList.add('bg-green-100', 'border-green-500', 'text-green-800');
-                } else if (btnLetter === selected && !isCorrect) {
-                    btn.classList.remove('border-slate-200', 'hover:border-blue-400', 'hover:bg-blue-50');
-                    btn.classList.add('bg-red-100', 'border-red-500', 'text-red-800');
-                } else {
-                    btn.classList.add('opacity-50');
+                // Envolvemos el texto de la opción en delimitadores inline $...$
+                btn.innerHTML = `$${opt.texto}$`;
+                btn.className = 'option-btn bg-white border-2 border-gray-200 text-gray-800 font-medium py-4 px-6 rounded-xl text-lg md:text-xl w-full shadow-sm hover:border-blue-400 focus:outline-none';
+                
+                // Marcamos la respuesta correcta usando data-attributes para evitar problemas al leer innerHTML
+                if (opt.correcta) {
+                    btn.dataset.correcta = "true";
                 }
+
+                btn.onclick = () => verificarRespuesta(btn, opt.correcta, q);
+                optionsGrid.appendChild(btn);
             });
 
-            updateScoreUI();
-        }
-
-        function nextQuestion() {
-            currentQuestionIndex++;
-            if (currentQuestionIndex < shuffledQuestions.length) {
-                renderQuestion();
-            } else {
-                showGameOver();
+            // Re-renderizar matemáticas
+            if (window.MathJax) {
+                MathJax.typesetPromise([mathContainer, optionsGrid]).catch((err) => console.log(err));
             }
         }
 
-        function showGameOver() {
-            document.getElementById('game-container').classList.add('hidden');
-            document.getElementById('game-over').classList.remove('hidden');
-            document.getElementById('final-correct').innerText = score.correct;
-            document.getElementById('final-incorrect').innerText = score.incorrect;
+        function verificarRespuesta(btnSeleccionado, esCorrecta, q) {
+            // Deshabilitar todos los botones para que no haga doble clic
+            const botones = optionsGrid.querySelectorAll('button');
+            botones.forEach(b => {
+                b.disabled = true;
+                b.classList.add('opacity-80', 'cursor-not-allowed');
+            });
+
+            if (esCorrecta) {
+                // Correcto!
+                btnSeleccionado.classList.add('correct-anim');
+                aciertos++;
+                scoreTexto.innerText = aciertos;
+                
+                // Mostrar feedback positivo corto y avanzar automático
+                feedbackArea.classList.remove('hidden');
+                feedbackArea.classList.add('border-green-500');
+                feedbackArea.classList.remove('border-red-500');
+                feedbackIcon.innerText = '✅';
+                feedbackTitle.innerText = '¡Excelente!';
+                feedbackTitle.classList.add('text-green-600');
+                feedbackTitle.classList.remove('text-red-600');
+                feedbackMessage.innerHTML = '¡Muy buen cálculo mental!';
+                
+                nextBtn.classList.remove('bg-gray-800', 'hover:bg-gray-900');
+                nextBtn.classList.add('bg-green-600', 'hover:bg-green-700');
+
+                // Auto-avanzar después de 1.2 seg si fue correcta
+                setTimeout(() => {
+                    siguientePregunta();
+                }, 1200);
+
+            } else {
+                // Incorrecto
+                btnSeleccionado.classList.add('incorrect-anim');
+                
+                // Buscar el correcto y resaltarlo suavemente
+                botones.forEach(b => {
+                    if (b.dataset.correcta === "true") {
+                        b.classList.remove('bg-white');
+                        b.classList.add('bg-green-50', 'border-green-400');
+                    }
+                });
+
+                // Mostrar explicación del profesor
+                feedbackArea.classList.remove('hidden');
+                feedbackArea.classList.remove('border-green-500');
+                feedbackArea.classList.add('border-red-500');
+                feedbackIcon.innerText = '👨‍🏫';
+                feedbackTitle.innerText = '¡Casi! Repasemos la regla:';
+                feedbackTitle.classList.remove('text-green-600');
+                feedbackTitle.classList.add('text-red-600');
+                
+                feedbackMessage.innerHTML = q.explicacion + `<br><br><strong>Respuesta correcta:</strong> $${q.res}$`;
+                
+                nextBtn.classList.remove('bg-green-600', 'hover:bg-green-700');
+                nextBtn.classList.add('bg-gray-800', 'hover:bg-gray-900');
+
+                // Renderizar MathJax en el feedback
+                if (window.MathJax) {
+                    MathJax.typesetPromise([feedbackMessage]).catch((err) => console.log(err));
+                }
+            }
         }
 
-        function restartGame() {
-            initGame();
+        function siguientePregunta() {
+            indexActual++;
+            mostrarPregunta();
         }
 
-        // Start on Load
-        window.onload = initGame;
+        function finalizarPractica() {
+            appScreen.classList.add('hidden');
+            appScreen.classList.remove('flex');
+            endScreen.classList.remove('hidden');
+            endScreen.classList.add('flex');
+
+            document.getElementById('final-score').innerText = aciertos;
+            const finalMsg = document.getElementById('final-message');
+            
+            if (aciertos === 100) {
+                finalMsg.innerText = "¡Perfecto! Eres una máquina del cálculo diferencial e integral.";
+            } else if (aciertos >= 80) {
+                finalMsg.innerText = "¡Sobresaliente! Tu cálculo mental es rapidísimo. Tuviste algunos errores mínimos.";
+            } else if (aciertos >= 50) {
+                finalMsg.innerText = "¡Buen trabajo! Vas por muy buen camino, te recomiendo darle otra pasada para pulir los detalles.";
+            } else {
+                finalMsg.innerText = "¡No te desanimes! El cálculo mental requiere práctica. Lee bien las explicaciones y vuelve a intentarlo, notarás la mejora.";
+            }
+        }
 
     </script>
 </body>
